@@ -26,20 +26,26 @@ type Dist = D.T Float Int
 d :: Int -> Int -> Dice 
 d number sides = MkDice diceDist number sides 
   where
-  diceDist = sumDiceDists dicelist
-  dicelist = take number $ repeat (die sides)
+  diceDist = sumDists distlist
+  distlist = take number $ repeat $ D.uniform [1..sides]
 
-die :: Int -> Dice
-die sides = MkDice {dist = D.uniform [1..sides], nDice = 1, nSides = sides}
+sumDists :: [Dist] -> Dist
+sumDists dists = D.norm $ foldr sumWithNorm (D.certainly 0) dists
+  where
+  sumWithNorm d1 d2 = D.norm $ liftM2 (+) d1 d2
+
+
 
 sumDiceDists :: [Dice] -> Dist
-sumDiceDists dice = D.norm $ foldr sumWithNorm (D.certainly 0) diceDists
+sumDiceDists dice = sumDists diceDists
   where
   diceDists = dist <$> dice
   sumWithNorm d1 d2 = D.norm $ liftM2 (+) d1 d2
 
 addDice :: Int -> Dice -> Dice
-addDice nExtraDice origDice = newNDice `d` (nSides origDice)
+addDice nExtraDice origDice 
+  | nExtraDice > 0 = newNDice `d` (nSides origDice)
+  | otherwise = origDice
   where
   newNDice = (nDice origDice) + nExtraDice
  
