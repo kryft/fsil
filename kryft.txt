@@ -1,0 +1,112 @@
+  [Sil 1.1.1 Character Dump]
+
+ Name   kryft         Age    2,721       Str   2
+ Sex    Male          Height   6'5       Dex   4
+ Race   Noldor        Weight   165       Con   4
+ House  Finarfin                         Gra   4
+
+ Game Turn   12,609   Melee  (+16,1d6)   Melee       16 = 12  +4  -1  +1
+ Exp Pool     2,979   Bows    (+3,1d8)   Archery      3 =  0  +4  -2  +1
+ Total Exp   24,679   Armor [+13,6-18]   Evasion     13 = 10  +4  -1
+ Burden       122.7                      Stealth     10 =  5  +4  +1
+ Max Burden   144.0   Health     41:41   Perception  10 =  2  +4  +3  +1
+ Depth         500'   Voice      41:41   Will         8 =  4  +4
+ Min Depth     500'                      Smithing     4 =  0  +4
+ Light Radius     2                      Song        10 =  6  +4
+
+ You are one of several children of a bard from the house of Finarfin.
+ You have light grey eyes, straight silver hair, and a fair complexion.
+
+
+
+
+
+
+  [Equipment]
+
+a) The Broken Sword of Amras (+1,1d5) <+2> 1.0 lb
+   It improves your stealth and perception by 2.  It is branded
+   with flame.  It provides resistance to fire.  It cannot be
+   harmed by the elements.  
+b) a Shortbow (+0,1d7) 1.2 lb
+   It can shoot arrows 12 squares (with your current strength).
+c) a Sapphire Ring of Perception <+1>
+   It improves your perception by 1.  
+d) an Adamant Ring
+e) (nothing)
+f) a Brass Lantern (with 4710 turns of light)
+g) a Mail Corslet (-1) [-3,2d4]
+h) a Cloak of Stealth [+1] <+3>
+   It improves your stealth by 3.  
+i) The Kite Shield of Hador (-1) [+0,1d6]
+   It provides resistance to cold and fire.  It cannot be harmed
+   by the elements.  
+j) a Helm [+0,1d2]
+k) a Set of Gloves [+0,1d1]
+l) The Pair of Boots of Irime [+1,1d1]
+   It sustains your dexterity.  It lights your path behind you.  
+   It cannot be harmed by the elements.  
+m) 30 Arrows (+3)
+   They can be shot 12 squares (with your current strength and bow).
+n) 37 Arrows {special}
+   They can be shot 12 squares (with your current strength and bow).
+
+
+  [Inventory]
+
+a) 2 Wrinkled Herbs of Rage
+b) 2 Pale Herbs of Restoration
+c) 4 Fragments of Lembas
+d) a Flask of oil
+e) a Murky Brown Potion of Orcish Liquor
+f) a Green Potion of Healing
+g) 4 Violet Potions of True Sight
+h) 3 Dark Blue Potions of Slow Poison
+i) a Sparkling Potion of Quickness
+j) 2 Vermilion Potions of Dexterity
+k) 4 Milky White Potions of Constitution
+l) 4 Clear Potions
+m) a Bronze Trumpet
+n) a Runed Staff of Understanding (used 1 time)
+o) a Willow Staff of Slumber (5 charges)
+p) a Rosewood Staff of Self Knowledge (used 2 times)
+q) an Ivory Staff of Recharging (used 1 time)
+r) a Crystal Amulet of Haunted Dreams {haunted dreams}
+   It grants you the ability to see invisible creatures, but it
+   also draws wraiths to your level.  
+s) a Longsword of Doriath (+0,2d5) [+1] 2.1 lb
+   It slays wolves and spiders.  
+t) a Greatsword (-1,3d6) [+1] 9.3 lb
+   It requires both hands to wield it properly.  
+u) a Throwing Axe (+0,2d4) {@t0, special} 1.5 lb
+v) 4 Throwing Axes (+0,2d4) {@t0} 6.0 lb
+   It can be thrown effectively (8 squares).  
+w) a Mattock of Belegost (-5,5d2) <+3> 8.6 lb
+   It improves your tunneling by 3.  It requires both hands to
+   wield it properly.  
+
+
+  [Notes]
+
+kryft of the Noldor
+Entered Angband on 31 Jul 2013
+
+    Turn     Depth    Note
+
+   2,756    200 ft    Encountered Gorgol, the Butcher
+   2,767    200 ft    Slew Gorgol, the Butcher
+   4,169    300 ft    Found The Broken Sword of Amras (from 200 ft)
+   4,762    300 ft    (Assassination)
+   5,791    350 ft    (Focused attack)
+   6,578    350 ft    (Crowd Fighting)
+   8,940    400 ft    (Curse Breaking)
+   9,809    450 ft    (Finesse)
+   9,945    450 ft    (Song of the Trees)
+  11,792    500 ft    Found The Kite Shield of Hador (from 400 ft)
+  12,308    500 ft    (Cruel Blow)
+  12,337    500 ft    Found The Pair of Boots of Irime
+
+
+
+  ['Score' 010087391]
+
