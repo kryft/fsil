@@ -54,11 +54,11 @@ addDice nExtraDice origDice
 fromTuple :: (Int, Int) -> Dice
 fromTuple (dice, sides) = dice `d` sides
 
-mean :: Dice -> Float
-mean d = D.expected $ fmap fromIntegral (dist d)
+mean :: Dist -> Float
+mean d = D.expected $ fmap fromIntegral d
 
-std :: Dice -> Float
-std d = D.stdDev $ fmap fromIntegral (dist d)
+std :: Dist -> Float
+std d = D.stdDev $ fmap fromIntegral d
 
 
 
