@@ -8,7 +8,7 @@ import Dice (Dice, d, zeroDie)
 monsterFile :: Parser [Monster]
 monsterFile = junk >> monsterEntry `sepEndBy` junk 
 
-junk = anyChar `manyTill` (lookAhead nameFieldStart <|> do {lookAhead eof; return " "})
+junk = anyChar `manyTill` (lookAhead nameFieldStart <|> myEof)
 
 parseMonsterFile :: String -> IO [Monster]
 parseMonsterFile filename = 
@@ -28,24 +28,27 @@ nameFieldStart = try $
         else return digits
 
 monsterEntry :: Parser Monster
-monsterEntry = 
+monsterEntry = try $
   do
     name <- nameField
-    skipTillField "I"
-    speed <- speedField
+    skipTillField "I" 
+    speed <- speedField 
     skipTillField "P"
     (evasion,protDice) <- protectionField
     skipTillField "B"
     attacks <- many1 attackField
+    anyChar `manyTill` try (eol >> eol)
     return $ Monster { monsName = name,
                        monsSpeed = speed,
                        monsEvasion = evasion,
                        monsProtDice = protDice,
                        monsAttacks = attacks }
 
-skipTillField fid = do
-  chars <- anyChar `manyTill` (lookAhead $ try (eol >> string (fid ++ ":")))
-  eol
+myEof = do {eof; return " "}
+
+skipTillField fid = try $ do
+  chars <- anyChar `manyTill` (lookAhead $ try (eol >>  string (fid ++ ":")))
+  eol 
   return chars
 
 nameField :: Parser String
