@@ -231,7 +231,7 @@
 #     - very low perception
 #     - very low evasion/melee
 #     - very high damage
-#Ê    - 1d4 prot, very high health
+#     - 1d4 prot, very high health
 #     - drop items
 #
 # - R   (raukar)
@@ -286,7 +286,7 @@
 #     - mindless
 #     - tunnel
 #     - regenerates
-#Ê    - 6d4 prot, very high health
+#     - 6d4 prot, very high health
 #
 # - V   (valar)
 #
