@@ -1,4 +1,5 @@
 module Dice (Dice, 
+             zeroDie,
              d, 
              dist,
              nDice,
@@ -20,6 +21,8 @@ import qualified Numeric.Probability.Percentage as Percentage
 
 
 data Dice = MkDice {dist :: D.T Float Int, nDice :: Int, nSides :: Int}
+instance Show Dice where
+  show d = show (nDice d) ++ "d" ++ show (nSides d)
 type Dist = D.T Float Int
 
 
@@ -28,6 +31,9 @@ d number sides = MkDice diceDist number sides
   where
   diceDist = sumDists distlist
   distlist = take number $ repeat $ D.uniform [1..sides]
+
+zeroDie :: Dice
+zeroDie = MkDice {dist = D.certainly 0, nDice = 0, nSides = 0}
 
 sumDists :: [Dist] -> Dist
 sumDists dists = D.norm $ foldr sumWithNorm (D.certainly 0) dists
