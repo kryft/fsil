@@ -1,9 +1,10 @@
-module MonsterParser (parseMonsterFile, junk, nameFieldStart) where
+module MonsterParser (parseMonsterFile) where
 
 import Text.Parsec
 import Text.Parsec.String (Parser, parseFromFile)
 import Monster
 import Dice (Dice, d, zeroDie)
+import GeneralParse
 
 monsterFile :: Parser [Monster]
 monsterFile = junk >> monsterEntry `sepEndBy` junk 
@@ -44,11 +45,11 @@ monsterEntry = try $
                        monsProtDice = protDice,
                        monsAttacks = attacks }
 
-myEof = do {eof; return " "}
 
 skipTillField fid = try $ do
-  chars <- anyChar `manyTill` (lookAhead $ try (eol >>  string (fid ++ ":")))
-  eol 
+  chars <- (lookAhead $ string (fid ++ ":"))
+            <|> anyChar `manyTill` (lookAhead $ try (eol >> string (fid ++ ":")))
+  optional eol --chomp eol if we found one in the look ahead 
   return chars
 
 nameField :: Parser String
@@ -57,16 +58,9 @@ nameField =
     string "N:"
     many1 digit 
     char ':'
-    name <- many1 (letter <|> char ' ' <|> char ',' <|> char '-')
+    name <- many1 (letter <|> oneOf " ,-'")
     eol
     return name
-
-
-eol =   try (string "\n\r")
-    <|> try (string "\r\n")
-    <|> string "\n"
-    <|> string "\r"
-    <?> "end of line"
 
 
 speedField :: Parser Int
@@ -81,12 +75,7 @@ protectionField :: Parser (Int,Dice)
 protectionField = 
   do
     string "P:"
-    char '['
-    ev <- parseInt
-    protDice <- option zeroDie $ try $ do
-      char ','
-      diceParser
-    char ']'
+    (ev,protDice) <- parseDefense
     spaces 
     return (ev, protDice)
 
@@ -94,30 +83,8 @@ attackField :: Parser (Int, Dice)
 attackField = 
   do
     string "B:"
-    anyChar `manyTill` (char '(')
-    accuracy <- parseInt
-    damDice <- option zeroDie $ try $ do
-      char ','
-      diceParser
-    char ')' 
+    anyChar `manyTill` (lookAhead $ char '(')
+    (accuracy, damDice) <- parseAttack
     spaces
     return $ (accuracy, damDice)
-
-parseInt :: Parser Int
-parseInt = 
-  do
-    sign <- option '+' (char '+' <|> char '-')
-    digits <- many1 digit
-    let value = read digits
-    return $ if sign == '+' then value else (-value)
-
-diceParser :: Parser Dice
-diceParser = 
-  do
-    nDice <- parseInt
-    char 'd'
-    nSides <- parseInt
-    return $ nDice `d` nSides
-
-
 
