@@ -8,6 +8,7 @@ import Text.Parsec.String (Parser, parseFromFile)
 --Skips everything until either 'relevantBit' or 'endOfInput' succeeds.
 --If 'relevantBit' succeeds, returns the result of that; otherwise
 --fails.
+ignoreUntil :: Parser a -> Parser b -> Parser a
 ignoreUntil relevantBit endOfInput = try relevantBit 
   <|> (try endOfInput >> parserFail "parser 'stop' succeeded")
   <|> (anyChar >> ignoreUntil relevantBit endOfInput)

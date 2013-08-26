@@ -5,7 +5,7 @@ import Data.Char(isSpace)
 import Text.Parsec.String (Parser, parseFromFile)
 import qualified Player as P
 import Data.List (concat, group)
-import Data.Maybe (catMaybes, fromJust)
+import Data.Maybe (catMaybes, fromJust, isJust)
 import qualified Data.Map as Map
 import Dice (Dice(ZeroDie), d)
 import GeneralParse
@@ -39,7 +39,8 @@ charDumpFile =
     equipment <- parseEquipment
     skipTill "[Notes]"
     abilities <- parseAbilities
-    let protDice = catMaybes $ map eqProtDice equipment
+    let protDice = 
+          (filter (/= ZeroDie)) . catMaybes $ map eqProtDice equipment
         eqAbilities' = concat $ map eqAbilities equipment
         allAbilities = abilities ++ eqAbilities'
         attacks = makeAttacks attackTuples allAbilities equipment
@@ -65,7 +66,8 @@ getStat str = skipTill str >> spaces >> parseInt
 
 doubleEol = eol >> eol
 
-endItemDesc = try $ many spaceBar >> (try (eol >> slotID) <|> try doubleEol)
+endItemDesc = try $ many spaceBar >> 
+  (try (eol >> lookAhead slotID) <|> try doubleEol)
 
 --The parser 'space' also skips newlines, so this is useful in some situations
 spaceBar = char ' '
@@ -80,8 +82,8 @@ parseName = try $ do
   spaces 
   nameField <- 13 `count` anyChar
   return $ stripSpacesAtEnd nameField
-    where
-    stripSpacesAtEnd = reverse . (dropWhile isSpace) . reverse
+
+stripSpacesAtEnd = reverse . (dropWhile isSpace) . reverse
 
 parseAttackTuples :: Parser [(Int,Dice)]
 parseAttackTuples = try $ do
@@ -93,7 +95,7 @@ parseAttackTuples = try $ do
 parseEquipment :: Parser [Equipment]
 parseEquipment = do
   anyChar `manyTill` lookAhead slotID
-  equippedItem `sepEndBy` lookAhead endItemDesc
+  equippedItem `sepEndBy` endItemDesc
 
 slotID :: Parser String
 slotID = try $ oneOf "abcdefghijklmn" >>= \id -> char ')' >> return [id, ')']
@@ -103,8 +105,8 @@ equippedItem = do
   slotStr <- slotID
   let slotType = case slotStr of
                     "a)" -> MainHand
-                    "e)" -> OffHand
-                    _    -> Other
+                    "i)" -> OffHand
+                    _    -> OtherSlot
   name <- do
     spaces  
     (try $ string "(nothing)") <|>
@@ -120,19 +122,21 @@ equippedItem = do
   many spaceBar
   --Only weapons have weight listed here (and we don't care about
   --weight for other items anyway)
-  maybeWeight <- ifWeapon slotType (fmap Just parseWeight) Nothing
-  many spaceOrSingleNewline 
+  maybeWeight <- option Nothing $ fmap Just parseWeight
+  let isMeleeWeapon = isJust maybeWeight && slotType /= OtherSlot
   resistances <- lookAhead $ parseResistances
   vulnerabilities <- lookAhead $ parseVulnerabilities
   abilities <- lookAhead $ parseItemAbilities
   --Only look for slays, brands and sharpness if it's a weapon
-  brands <- ifWeapon slotType (lookAhead parseBrands) []
-  slays <- ifWeapon slotType (lookAhead parseSlays) []
-  sharpness <- ifWeapon slotType parseSharpness NotSharp
---  manyTill anyChar endItemDesc
+  brands <- if isMeleeWeapon then lookAhead parseBrands else return []
+  slays <- if isMeleeWeapon then lookAhead parseSlays else return []
+  sharpness <- if isMeleeWeapon then lookAhead parseSharpness 
+                                else return NotSharp
+  anyChar `manyTill` (lookAhead endItemDesc)
 
-  return $ Equipment { eqName = name,
+  return $ Equipment { eqName = stripSpacesAtEnd $ name,
                        eqSlot = slotType,
+                       eqIsMeleeWeapon = isMeleeWeapon,
                        eqProtDice = maybeProtDice,
                        eqWeight = maybeWeight,
                        eqResistances = resistances,
@@ -142,12 +146,7 @@ equippedItem = do
                        eqBrands = brands,
                        eqSlays = slays }
 
-ifWeapon :: EqSlot -> Parser a -> a -> Parser a
-ifWeapon slot parser defaultValue =
-  case slot of
-    Other -> return defaultValue
-    _ -> parser
-  
+ 
 parseWeight :: Parser Double
 parseWeight = try $ do
   spaces
@@ -283,10 +282,11 @@ parseAbility = do
              try (string "Power") <|>
              try (string "Subtlety") <|>
              try (string "Hardiness") <|>
+             try (string "Assassination") <|>
              try (mlString "Two Weapon Fighting") <|>
              try (mlString "Rapid Attack") <|>
              try (mlString "Inner Light") <|>
-             try (mlString "Critical Resistance")
+             try (mlString "Critical Resistance") 
   return $ stringToAbility ability
   where
     stringToAbility :: String -> Ability
@@ -300,11 +300,11 @@ parseAbility = do
         "Two Weapon Fighting" -> TwoWeaponFighting
         "Rapid Attack" -> RapidAttack
         "Inner Light" -> InnerLight
+        "Assassination" -> Assassination
 
 --Parse abilities from the [Notes] section of a Sil char dump
-parseAbilities = junk >> ability `sepEndBy` junk
-  where ability = between (char '(') (char ')') parseAbility
-        junk = skipMany $ (lookAhead $ char '(') <|> do {eof; return ' '}
+parseAbilities = many $ (try $ ignoreUntil validAbility eof)
+  where validAbility = between (char '(') (char ')') parseAbility
 
 
 makeAttacks :: [(Int,Dice)] -> [Ability] -> [Equipment] -> [Attack]

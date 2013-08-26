@@ -1,0 +1,293 @@
+  [Sil 1.1.0 Character Dump]
+
+ Name   MC Hammer     Age    2,528       Str   7 =  2  +2      +3
+ Sex    Male          Height   6'7       Dex  15 =  4  +8      +3
+ Race   Noldor        Weight   164       Con   8 =  5          +3
+ House  Feanor                           Gra  17 =  3  +9      +5
+
+ Game Turn   75,215   Melee (+34,2d11)   Melee       34 = 20 +15  +1  -2
+ Exp Pool     1,540         (+34,2d11)   Archery     16 =  0 +15      +1
+ Total Exp  128,440   Bows   (+16,0d0)   Evasion     52 = 21 +15 +16
+ Burden       136.9   Armor [+52,3-11]   Stealth     22 =  6 +15  +1
+ Max Burden   358.0                      Perception  24 =  7 +17
+ Depth           0'   Health     85:85   Will        22 =  5 +17
+ Min Depth       0'   Voice    887:887   Smithing    18 =  0 +17      +1
+ Light Radius     6                      Song        38 = 20 +17  +1
+
+ Can't touch this.
+
+
+
+
+
+
+
+  [Last Messages]
+
+> You riposte!
+> You hit Carcharoth, the Jaws of Thirst.
+> Carcharoth, the Jaws of Thirst misses you.
+> You riposte!
+> You miss Carcharoth, the Jaws of Thirst.
+> Carcharoth, the Jaws of Thirst misses you. <2x>
+> You riposte!
+> You miss Carcharoth, the Jaws of Thirst.
+> Carcharoth, the Jaws of Thirst misses you.
+> You riposte!
+> You hit Carcharoth, the Jaws of Thirst!
+> Carcharoth, the Jaws of Thirst misses you.
+> You riposte!
+> You hit Carcharoth, the Jaws of Thirst!
+> You have slain Carcharoth, the Jaws of Thirst.
+
+
+  [Screenshot]
+
+  .......
+  ~...#..
+  ~~.....
+  .~.@...
+  .~~...#
+  ..~~...
+  ...~...
+
+
+  [Equipment]
+
+a) The Mithril Longsword 'Hot N Cold' (+1,2d6) [+1] <+1> 2.0 lb
+   It improves your song by 1.  It is branded with flame and 
+   frost.  It cannot be harmed by the elements.  
+b) (nothing)
+c) The Ring of Fire <+1>
+   It increases your strength and dexterity by 1.  It improves
+   your damage sides by 1.  It provides resistance to fire and 
+   blindness.  It cannot be harmed by the elements.  
+d) The Ring 'Cold as Ice' <+1>
+   It increases your strength and dexterity by 1.  It improves
+   your damage sides by 1.  It provides resistance to cold and 
+   confusion.  It cannot be harmed by the elements.  
+e) The Amulet 'Bohemian Rhapsody' <+3>
+   It increases your grace by 3.  It cannot be harmed by the
+   elements.  It grants you the abilities: Unwavering Voice and 
+   Song of Mastery.  
+f) a Silmaril
+   It sustains your grace.  It grants you the ability to see
+   invisible creatures.  It cannot be harmed by the elements.  
+g) The Robe of Freddie Mercury [+2] <+2>
+   It increases your dexterity and grace by 2.  It provides
+   resistance to fire, fear, and stunning.  It cannot be harmed
+   by the elements.  
+h) The Shadow Cloak 'Suspicious Minds' [+5] <+2>
+   It increases your dexterity by 2.  It improves your stealth
+   by 2.  It creates an unnatural darkness.  It cannot be harmed
+   by the elements.  
+i) The Mithril Shield 'Titanium' [+2,1d9]
+   It provides resistance to cold, fire, and poison.  It cannot
+   be harmed by the elements.  
+j) The Crown 'Amazing Grace' [+2] <+4>
+   It increases your grace by 4.  It cannot be harmed by the
+   elements.  
+k) The Set of Mithril Gauntlets 'Return to Sender' [+2,1d1] <+2>
+   It increases your dexterity by 2.  It cannot be harmed by the
+   elements.  It grants you the ability: Riposte.  
+l) The Pair of Boots 'Running Man' [+2,1d1]
+   It grants you great speed and freedom of movement.  It cannot
+   be harmed by the elements.  
+m) 90 Arrows (Poisoned)
+   They are branded with venom.  They can be shot by a bow.
+n) 68 Arrows of Piercing
+   They cut easily through armour.  They can be shot by a bow.
+
+
+  [Inventory]
+
+a) 10 Mottled Herbs of Sustenance
+b) 2 Fragments of Lembas
+c) 35 Clear Potions of Miruvor
+d) 45 Smoky Potions of Healing
+e) 7 Brown Potions of Voice
+f) 20 Green Potions of Strength
+g) 17 Milky White Potions of Dexterity
+h) 18 Pale Green Potions of Constitution
+i) 8 Grey Potions of Grace
+j) a Brass Trumpet of Blasting
+k) an Oak Staff of Revelations (7 charges)
+l) an Oak Staff of Revelations (6 charges)
+m) an Oak Staff of Revelations (2 charges)
+n) a Walnut Staff of Foes (0 charges)
+o) The Lesser Jewel of Grace Jones <+2>
+   It increases your grace by 2.  It lights the dungeon around
+   you and burns brightly, increasing your light radius by an
+   additional square.  It cannot be harmed by the elements.  
+p) The Robe of Max Grace <+4>
+   It increases your grace by 4.  It cannot be harmed by the
+   elements.  
+q) The Cloak of Grace [+1] <+3>
+   It increases your grace by 3.  It cannot be harmed by the
+   elements.  
+r) The Set of Gloves 'Hammer to Fall' <+3>
+   It improves your smithing by 3.  It cannot be harmed by the
+   elements.  It grants you the ability: Weaponsmith.  
+s) The War Hammer 'Hi Ho!' (-1,4d1) <+4> 5.0 lb
+   It improves your smithing and song by 4.  It cannot be harmed
+   by the elements.  It grants you the ability: Two Weapon
+   Fighting.  It does extra damage when wielded with both hands.
+   
+t) The War Hammer 'Hammertime' (-2,4d1) <+4> 5.0 lb
+   It improves your smithing by 4.  It cannot be harmed by the
+   elements.  It grants you the ability: Masterpiece.  It does
+   extra damage when wielded with both hands.  
+
+
+  [Notes]
+
+MC Hammer of the Noldor
+Entered Angband on 21 Oct 2012
+
+    Turn     Depth    Note
+
+     709    100 ft    (Armoursmith)
+     709    100 ft    (Artistry)
+     798    100 ft    Made Leather Armour [+0,1d5]  7.0 lb
+     899    100 ft    Made a Round Shield [+1,1d4]  5.0 lb
+   1,167    100 ft    Made a Pair of Boots [+1,1d2]  2.0 lb
+   2,389    250 ft    Made a Helm [+0,1d3]  5.0 lb
+   2,461    250 ft    Made a Set of Gauntlets [+0,1d1]  3.0 lb
+   2,465    250 ft    (Power)
+   2,959    250 ft    Lantern
+   2,966    300 ft    (Keen Senses)
+   3,194    300 ft    Found The Broken Sword of Amras
+   4,184    400 ft    (Follow-Through)
+   4,245    400 ft    Slew Boldog, the Merciless
+   4,663    400 ft    (Opportunist)
+   5,920    450 ft    Slew Uldor, the Accursed
+   5,922    450 ft    On my last two games Uldor has only dropped a torch.
+   6,106    450 ft    Found The Spear of Boldog (from 400 ft)
+   6,964    450 ft    (Lore-Keeper)
+   7,290    500 ft    (Lore-Master)
+   8,127    500 ft    (Enchantment)
+   8,240    500 ft    Made a Set of Gloves of the Forge <+2>  0.5 lb
+   8,404    500 ft    Made a Crown of Command  3.0 lb
+   8,524    500 ft    Made a Crown of Grace <+1>  3.0 lb
+   8,831    500 ft    (Song of Elbereth)
+   8,848    500 ft    Slew Gilim, the Giant of Eruman
+   9,178    550 ft    Slew Othrod, the Orc Lord
+   9,626    550 ft    (Blocking)
+   9,906    550 ft    Found The Shortsword of Amrod
+  10,346    550 ft    Made a Dwarf Mask [-1,1d3]  8.0 lb
+  10,502    550 ft    Made a Set of Gauntlets [+1,1d1]  3.0 lb
+  10,561    600 ft    Found The Cloak of Maglor
+  10,569    600 ft    (Song of Aule)
+  10,771    600 ft    (Inner Light)
+  12,915    700 ft    Found The Mail Corslet of Fingon
+  13,383    700 ft    Made a Mithril Shield of Frost [+0,1d6]  3.4 lb
+  13,594    700 ft    Made a Pair of Boots of Free Action [+1,1d2]  2.0 lb
+  14,242    700 ft    Creeping horror just destroyed my forge gloves...
+  14,707    700 ft    Destroyed Duruin, Least of the Balrogs
+  14,946    700 ft    Made a Set of Gauntlets of the Forge (-1) [+0,1d1] 
+                      <+3>  3.0 lb 
+  15,227    750 ft    Found The Shortsword 'Dagmor'
+  15,234    750 ft    Destroyed Belegwath, Balrog of Shadow
+  15,251    750 ft    Slew Umuiyan, the Doorkeeper
+  15,352    750 ft    (Song of Sharpness)
+  16,429    750 ft    (Artifice)
+  16,873    800 ft    Made The Set of Gloves 'Hammer to Fall' <+3>  0.5 lb
+  17,040    800 ft    Made a Longsword (+1,2d6) [+1]  3.0 lb
+  17,834    800 ft    (Grace)
+  17,882    800 ft    Found The Long Corslet of Maedhros
+  18,339    800 ft    Made The War Hammer 'MC' (-2,4d1) <+3>  5.0 lb
+  18,954    800 ft    (Grace)
+  20,032    850 ft    Slew Tevildo, Prince of Cats
+  20,041    850 ft    Slew Oikeroi, Guard of Tevildo
+  20,187    850 ft    Subdued The Deathblade 'Delmereth'
+  20,187    850 ft    Found The Deathblade 'Delmereth'
+  21,015    850 ft    Found The Longbow 'Belthronding'
+  22,071    900 ft    Slew Dagorhir, the Elfbane
+  22,877    900 ft    (Woven Themes)
+  22,961    900 ft    Destroyed Turkano, Balrog of the Hosts
+  22,961    900 ft    Found The Battle Axe of Hurin
+  23,442    900 ft    Made The War Hammer 'Hammertime' (-2,4d1) <+4>  5.0 lb 
+  24,983    900 ft    Made The Crown 'Pray' [+1] <+2>  3.0 lb
+  25,156    900 ft    Entered Hoard of the Worm of Greed
+  25,249    900 ft    Found The Dagger of Nargil
+  25,256    900 ft    Slew Glaurung, the Deceiver
+  26,147    900 ft    Made The Robe of Prince [+1] <+2>  3.0 lb
+  26,380    900 ft    Slew Smaug the Golden
+  26,620    900 ft    Slew Draugluin, Sire of Werewolves
+  26,620    900 ft    Found The Wolf-Hame of Draugluin
+  27,026    950 ft    Entered Gothmog's hall
+  27,038    950 ft    Slew Shelob, Spider of Darkness
+  27,141    950 ft    Destroyed Gothmog, High Captain of Balrogs
+  27,159    950 ft    Destroyed Lungorthin, Lord of Balrogs
+  27,184    950 ft    Destroyed Vallach, Balrog of Sudden Flame
+  27,488    950 ft    (Jeweller)
+  27,488    950 ft    (Rapid Attack)
+  27,941    950 ft    Made The Amulet 'Medallion' <+3>  0.3 lb
+  27,982    950 ft    Entered Cat Fortress
+  28,204    950 ft    Found The Round Shield of Angrod
+  28,521    950 ft    Found The Greatsword of Saithnar
+  29,030    950 ft    Made a Mithril Shield of Frost [+1,1d7]  4.0 lb
+  29,483    950 ft    Made a Bronze Ring of Damage <+2>  0.1 lb
+  29,874    950 ft    Made a Bronze Ring of Damage <+2>  0.1 lb
+  29,929    950 ft    Found The Longsword 'Orcrist'
+  30,778  1,000 ft    Entered Morgoth's throne room
+  30,802  1,000 ft    Slew Ungoliant, the Gloomweaver
+  30,813  1,000 ft    Slew Ancalagon the Black
+  30,821  1,000 ft    Found The Massive Iron Crown of Morgoth
+  30,894  1,000 ft    Slew Morgoth, Lord of Darkness
+  30,894  1,000 ft    Found The Mighty Hammer 'Grond'
+  30,941  1,000 ft    Slew Gorthaur, Servant of Morgoth
+  31,452  1,000 ft    Found The Great Spear of Melkor
+  31,505  1,000 ft    Cut a Silmaril from Morgoth's crown
+  31,546  1,000 ft    Slew Thuringwethil, the Vampire Messenger
+  31,546  1,000 ft    Found The Bat-Fell of Thuringwethil
+  32,680    850 ft    Slew Maeglin, Betrayer of Gondolin
+  32,680    850 ft    Found The Galvorn Armour of Maeglin
+  33,258    850 ft    Made The Lesser Jewel of Grace Jones <+2>  0.2 lb
+  33,734    850 ft    Made The Crown 'Amazing Grace' <+3>  3.0 lb
+  34,018    850 ft    Made a Mithril Longsword (Defender) (+2,2d6) [+2]  2.0 
+                      lb 
+  35,203    900 ft    Made The Cloak of Grace [+1] <+3>  2.0 lb
+  36,396    900 ft    Made The Pair of Boots 'Running Man' [+2,1d1]  2.0 lb
+  38,842    850 ft    Made The Robe of Max Grace <+4>  3.0 lb
+  40,287    900 ft    Made The Mithril Shield 'Titanium' [+2,1d9]  4.0 lb
+  41,810    950 ft    Found The Longsword 'Glamdring'
+  42,625    950 ft    Found The Pair of Greaves of Orodreth
+  45,609    900 ft    Made The War Hammer 'Hi Ho!' (-1,4d1) <+4>  5.0 lb
+  47,280    950 ft    Entered Ungoliant's lair
+  48,504    950 ft    Made The Amulet 'Bohemian Rhapsody' <+3>  0.3 lb
+  49,334    950 ft    Made The Set of Mithril Gauntlets 'Return to Sender' 
+                      [+2,1d1] <+2>  1.5 lb 
+  49,650    950 ft    Entered Chambers of Thu
+  50,605    950 ft    Made The Shadow Cloak 'Suspicious Minds' [+5] <+2>  
+                      1.0 lb 
+  51,475    950 ft    Made The Ring of Fire <+1>  0.1 lb
+  51,833    900 ft    Slew Scatha the Worm
+  52,808    950 ft    Made The Ring 'Cold as Ice' <+1>  0.1 lb
+  53,590    950 ft    Made The Crown 'Amazing Grace' [+2] <+4>  3.0 lb
+  55,567    950 ft    Made The Robe of Freddie Mercury [+2] <+2>  3.0 lb
+  57,186    950 ft    Made The Mithril Longsword 'Hot N Cold' (+1,2d6) [+1] 
+                      <+1>  2.0 lb 
+  57,272    950 ft    (Crowd Fighting)
+  57,700    900 ft    (Assassination)
+  58,813    750 ft    Have not seen a BlessedRealm this game!
+  59,693    700 ft    Slew Nan, the Giant
+  59,693    700 ft    Found The Greatsword 'Glend'
+  60,234    700 ft    Made an Amber Amulet of the Blessed Realm <+1>  0.3 lb 
+  60,241    700 ft    Just because I hadn't found one...
+  60,277    700 ft    Delthaur where art thou?
+  67,634    650 ft    Slew Ulfang the Black
+  73,838    450 ft    Slew Orcobal, Champion of the Orcs
+  74,259    250 ft    Slew Gorgol, the Butcher
+  74,306    250 ft    Just Delthaur and C left.
+  74,614     Gates    Entered The Gates of Angband
+  75,199     Gates    Slew Carcharoth, the Jaws of Thirst
+
+  75,214     Gates    You escaped the Iron Hells on 24 October 2012.
+  75,214     Gates    You brought back a Silmaril from Morgoth's crown!
+
+
+
+
+  ['Score' 141124785]
+

@@ -7,7 +7,7 @@ import Dice
 --you can modify the player's melee/evasion scores with 
 --modifyEvasionWith and modifyAccuracyWith
 data Ability = Finesse | Subtlety | Power | CritRes | Hardiness 
-  | TwoWeaponFighting | RapidAttack | InnerLight
+  | TwoWeaponFighting | RapidAttack | InnerLight | Assassination
   deriving (Show, Eq)
 
 data Song = SongSharp | SongTrees | SongStay
@@ -20,7 +20,7 @@ data Singing = Quiet | OneSong Song | WovenThemes (Song, Song)
 
 --Currently the only information we need about the equipment slot of an item
 --is whether the item is the main weapon or in the off-hand slot. 
-data EqSlot = MainHand | OffHand | Other
+data EqSlot = MainHand | OffHand | OtherSlot
   deriving (Show, Eq)
 
 --Currently we only keep track of information that can only be obtained by
@@ -30,6 +30,7 @@ data Equipment = Equipment
     eqSlot :: EqSlot, 
     eqName :: String,
     eqWeight :: Maybe Double, --Nothing if the item is not a weapon
+    eqIsMeleeWeapon :: Bool,
     eqProtDice :: Maybe Dice, --Protection granted by equipping this item
     eqResistances :: [Element],
     eqVulnerabilities :: [Element],
