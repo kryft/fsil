@@ -1,5 +1,4 @@
-module Dice (Dice, 
-             zeroDie,
+module Dice (Dice(ZeroDie), 
              d, 
              dist,
              nDice,
@@ -19,21 +18,38 @@ import Data.List
 import qualified Numeric.Probability.Distribution as D
 import qualified Numeric.Probability.Percentage as Percentage
 
+type Dist = D.T Float Int
 
-data Dice = MkDice {dist :: D.T Float Int, nDice :: Int, nSides :: Int}
+data Dice = ZeroDie | MkDice Dist Int Int
+
+dist ZeroDie = D.certainly 0
+dist (MkDice dist' _ _) = dist'
+
+nDice ZeroDie = 0
+nDice (MkDice _ nDice' _) = nDice'
+
+nSides ZeroDie = 0
+nSides (MkDice _ _ nSides') = nSides'
+
 instance Show Dice where
   show d = show (nDice d) ++ "d" ++ show (nSides d)
-type Dist = D.T Float Int
+
+instance Eq Dice where
+  ZeroDie == ZeroDie = True
+  (MkDice _ nDiceX nSidesX) == (MkDice _ nDiceY nSidesY)
+    = (nDiceX == nDiceY) && (nSidesX == nSidesY)
+  _ == _ = False
+  
+
 
 
 d :: Int -> Int -> Dice 
-d number sides = MkDice diceDist number sides 
+d number sides 
+  | number > 0 && sides > 0 = MkDice diceDist number sides 
+  | otherwise = ZeroDie
   where
   diceDist = sumDists distlist
   distlist = take number $ repeat $ D.uniform [1..sides]
-
-zeroDie :: Dice
-zeroDie = MkDice {dist = D.certainly 0, nDice = 0, nSides = 0}
 
 sumDists :: [Dist] -> Dist
 sumDists dists = D.norm $ foldr sumWithNorm (D.certainly 0) dists
