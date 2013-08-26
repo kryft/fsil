@@ -1,18 +1,20 @@
 import Control.Monad
 import Numeric
 import Data.List ((!!))
-import qualified Numeric.Probability.Distribution as D
-import qualified Numeric.Probability.Percentage as Percentage
+import qualified Numeric.Probability.Distribution 
 import qualified Monster as M
-import MonsterParser
-
+import qualified Player as P
+import Types
 import Dice
+import MonsterParser --ghci convenience
+
 
 monsBaseCritThres = 7
 
+
 data FightStats = FightStats { damGiven :: Dist, 
-                               damTaken :: Dist, 
-                               player :: String, 
+                               damTaken :: [Dist], 
+                               player :: P.Player, 
                                opponent :: M.Monster
                              }
 
@@ -39,11 +41,11 @@ damageDist damDice protDiceList =
     protection <- sumDiceDists protDiceList
     return $ max 0 (damage - protection)
 
-attackDist :: Int -> Dice -> Double -> Int -> [Dice] -> Dist
-attackDist accuracy damDice baseCriticalThreshold evasion 
-  protectionDice =
+--
+attackDist :: [Attack] -> Int -> [Dice] -> Dist
+attackDist attack evasion protectionDice =
   do
-    toHit <- D.norm $ toHitDist accuracy evasion
+    toHit <- D.norm $ toHitDist (A.accuracy attack) evasion
     if toHit < 1 then
       D.certainly 0
     else do
@@ -52,16 +54,19 @@ attackDist accuracy damDice baseCriticalThreshold evasion
       D.norm $ damageDist damDice' protectionDice
 
 
-fight :: Int -> Dice -> Int -> [Dice] -> Double -> String -> Int -> [M.Monster] -> FightStats
-fight acc damDice ev protDice baseCritThres monsName monsAttackNumber monsList =
-  let opponent' = M.getMonster monsName monsList
-      (oppAcc,oppDam) = (M.monsAttacks opponent') !! monsAttackNumber
-      oppEv = M.monsEvasion opponent'
-      oppProt = M.monsProtDice opponent'
-      damGiven' = attackDist acc damDice baseCritThres oppEv [oppProt]
+fight :: P.Player -> M.Monster -> FightStats
+fight player monster =
+  let monsAttacks = (M.attacks monster)
+      damGiven' = attackDist player monster 
       oppBaseCritThres = monsBaseCritThres + 2 * fromIntegral (nDice oppDam)
       damTaken' = attackDist oppAcc oppDam oppBaseCritThres ev protDice
   in
     FightStats { damGiven = damGiven', damTaken = damTaken', 
                  player = "player", opponent = opponent' }
-     
+
+protModifier :: Sharpness -> Double
+protModifier NotSharp = 1.0
+protModifier Sharp = 0.5
+protModifier VerySharp = 0
+
+

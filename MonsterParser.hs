@@ -39,11 +39,11 @@ monsterEntry = try $
     skipTillField "B"
     attacks <- many1 attackField
     anyChar `manyTill` try (eol >> eol)
-    return $ Monster { monsName = name,
-                       monsSpeed = speed,
-                       monsEvasion = evasion,
-                       monsProtDice = protDice,
-                       monsAttacks = attacks }
+    return $ Monster { name = name,
+                       speed = speed,
+                       evasion = evasion,
+                       protDice = protDice,
+                       attacks = attacks }
 
 
 skipTillField fid = try $ do

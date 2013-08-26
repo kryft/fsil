@@ -1,15 +1,42 @@
 module Monster where
 
+import Data.Map as Map
 import Dice
-import Data.List (null, filter)
 import Text.Regex.Posix ((=~))
+import Attack
 
-data Monster = Monster { monsName :: String, 
-                         monsAttacks :: [(Int,Dice)], 
-                         monsEvasion :: Int,
-                         monsProtDice :: Dice,
-                         monsSpeed :: Int
+data MonsterCritRes = None | Resistant | Immune
+
+data Alertness = Alert | Unwary | Sleeping
+
+--seenByPlayer defaults to true (Fsil doesn't do perception checks for
+--Sulrauko etc); use this to make the monster invisible
+unseen :: Monster -> Monster
+unseen m = m {seenByPlayer = False}
+
+sleeping :: Monster -> Monster
+sleeping m = m { alertness = Sleeping }
+--sleeping m = m {evasion = -5}
+
+unwary :: Monster -> Monster
+unwary m = m {alertness = Unwary}
+--unwary m = m {evasion = truncate $ (evasion m) / 2}
+
+data Monster = Monster { name :: String, 
+                         attacks :: [Attack], 
+                         evasion :: Int,
+                         lightRadius :: Int,
+                         alertness :: Alertness,
+                         protDice :: Dice,
+                         speed :: Int,
+                         hatesLight :: Bool,
+                         seenByPlayer :: Bool, 
+                         resistances :: Map.Map Element Int,
+                         criticalRes :: MonsterCritRes,
+                         slainby :: Slay,
+                         onLitSquare :: Bool
                        } deriving Show
+
 
 
 matchMonster :: String -> Monster -> Bool
