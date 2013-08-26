@@ -1,9 +1,26 @@
 module GeneralParse where
 
-import Dice (Dice, d, zeroDie)
+import Dice (Dice(ZeroDie), d)
+import Numeric (readFloat)
 import Text.Parsec
 import Text.Parsec.String (Parser, parseFromFile)
 
+--Skips everything until either 'relevantBit' or 'endOfInput' succeeds.
+--If 'relevantBit' succeeds, returns the result of that; otherwise
+--fails.
+ignoreUntil relevantBit endOfInput = try relevantBit 
+  <|> (try endOfInput >> parserFail "parser 'stop' succeeded")
+  <|> (anyChar >> ignoreUntil relevantBit endOfInput)
+
+seqSepBy :: [Parser a] -> Parser a -> Parser [a]
+seqSepBy (p:[]) _ = do {pRes <- p; return [pRes]}
+seqSepBy (p:ps) separator =
+  do
+    pRes <- p
+    sep <- separator
+    rest <- seqSepBy ps separator
+    return $ pRes : sep : rest 
+  
 
 parseInt :: Parser Int
 parseInt = 
@@ -12,6 +29,20 @@ parseInt =
     digits <- many1 digit
     let value = read digits
     return $ if sign == '+' then value else (-value)
+
+parseDouble :: Parser Double
+parseDouble = try $
+  do
+    beforeRadix <- many1 digit
+    radix <- char '.'
+    afterRadix <- many1 digit
+    let parsedFloat = readFloat $ beforeRadix ++ [radix] ++ afterRadix
+    case parsedFloat of
+      [(f,_)] -> return f
+      _ -> parserFail "failed parsing double"
+
+    
+
 
 diceParser :: Parser Dice
 diceParser = 
@@ -31,23 +62,23 @@ eol =   try (string "\n\r")
 myEof :: Parser String
 myEof = do {eof; return " "}
 
-parseDefense :: Parser (Int, Dice)
-parseDefense =
+parseDefenseTuple :: Parser (Int, Dice)
+parseDefenseTuple =
   do
     char '['
     ev <- parseInt
-    protDice <- option zeroDie $ try $ do
+    protDice <- option ZeroDie $ try $ do
       char ','
       diceParser
     char ']'
     return (ev, protDice)
  
-parseAttack :: Parser (Int, Dice)
-parseAttack = 
+parseAttackTuple :: Parser (Int, Dice)
+parseAttackTuple = 
  do
     char '('
     accuracy <- parseInt
-    damDice <- option zeroDie $ try $ do
+    damDice <- option ZeroDie $ try $ do
       char ','
       diceParser
     char ')' 
