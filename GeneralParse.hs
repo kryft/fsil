@@ -67,9 +67,12 @@ parseDefenseTuple :: Parser (Int, Dice)
 parseDefenseTuple =
   do
     char '['
-    ev <- parseInt
+    ev <- option 0 $ try $ do 
+      i <- parseInt
+      notFollowedBy $ char 'd'
+      return i
     protDice <- option ZeroDie $ try $ do
-      char ','
+      optional $ char ','
       diceParser
     char ']'
     return (ev, protDice)
