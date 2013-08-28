@@ -1,6 +1,8 @@
 module Types where
 
 import Dice
+import qualified Data.Map as Map
+import Data.List(group)
 
 --These are the only abilities that affect our current combat model;
 --if you want to simulate something like Dodging or Concentration,
@@ -45,6 +47,23 @@ data Equipment = Equipment
 data Element = Fire | Cold | Poison | Dark | Lightning 
   deriving (Eq, Show, Ord)
 
+noResistance = Map.fromList [(Fire,0), (Cold,0), (Poison,0), (Lightning,0), 
+  (Dark,0)]
+
+makeResistanceMap :: [Element] -> [Element] -> Map.Map Element Int
+makeResistanceMap resList vulnList = 
+  let groupedRes = group resList
+      groupedVuln = group vulnList
+      makeResTuple elGroup = (head elGroup, length elGroup)
+      resTuples = map makeResTuple groupedRes
+      vulnTuples = map makeResTuple groupedVuln
+      baseRes = noResistance
+      insertResTupleWith func (elem', level) = Map.insertWith func elem' level
+      insertResTuplesWith f tuples resMap 
+        = foldr (insertResTupleWith f) resMap tuples
+  in insertResTuplesWith (-) vulnTuples $ insertResTuplesWith (+) resTuples $ baseRes
+ 
+
 data Sharpness = NotSharp | Sharp | VerySharp
   deriving (Eq, Show)
 
@@ -58,5 +77,7 @@ data Attack = Attack { accuracy :: Int,
                        brands :: [Element],
                        slays :: [Slay],
                        sharpness :: Sharpness,
-                       critThreshold :: Double }
+                       critThreshold :: Double,
+                       canCrit :: Bool,
+                       alwaysHits :: Bool}
   deriving (Show)

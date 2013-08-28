@@ -5,6 +5,10 @@ import Numeric (readFloat)
 import Text.Parsec
 import Text.Parsec.String (Parser, parseFromFile)
 
+--The parser 'space' also skips newlines, so this is useful in some situations
+spaceBar :: Parser Char
+spaceBar = char ' '
+
 --Skips everything until either 'relevantBit' or 'endOfInput' succeeds.
 --If 'relevantBit' succeeds, returns the result of that; otherwise
 --fails.

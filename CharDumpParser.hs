@@ -9,7 +9,7 @@ import Data.Maybe (catMaybes, fromJust, isJust)
 import qualified Data.Map as Map
 import Dice (Dice(ZeroDie), d)
 import GeneralParse
-import Types
+import Types as T
 
 
 readCharDump :: String -> IO P.Player
@@ -50,7 +50,7 @@ charDumpFile =
         P.lightRadius = lightRadius,
         P.evasion = evasion,
         P.stealth = stealth,
-        P.resistances = makeResistanceMap equipment,
+        P.resistances = resistancesFrom equipment,
         P.will = will,
         P.song = song,
         P.activeSongs = Quiet,
@@ -69,8 +69,6 @@ doubleEol = eol >> eol
 endItemDesc = try $ many spaceBar >> 
   (try (eol >> lookAhead slotID) <|> try doubleEol)
 
---The parser 'space' also skips newlines, so this is useful in some situations
-spaceBar = char ' '
 
 spaceOrSingleNewline = spaceBar <|> try ( eol >> notFollowedBy eol >> return '\n')
 
@@ -326,26 +324,23 @@ makeAttack abilities (weapon, (accuracy, damDice)) =
               brands = brands,
               slays = slays,
               sharpness = sharpness,
-              critThreshold = critThres}
+              critThreshold = critThres,
+              --player attacks can always crit; this flag is for
+              --monsters
+              canCrit = True,
+              alwaysHits = False}
 
 --Collects all the elemental resistances and vulnerabilities from a
 --list of Equipment and creates a map from Element to Int, where the
 --number indicates the player's resistance level to that element.
 --(E.g. two items providing cold resistance and one item providing
 --cold vulnerability add up to (Cold, 1) in the map.)
-makeResistanceMap :: [Equipment] -> Map.Map Element Int
-makeResistanceMap equipment = 
-  let groupedRes = group . concat $ map eqResistances equipment
-      groupedVuln = group . concat $ map eqVulnerabilities equipment
-      makeResTuple elGroup = (head elGroup, length elGroup)
-      resTuples = map makeResTuple groupedRes
-      vulnTuples = map makeResTuple groupedVuln
-      baseRes = P.noResistance
-      insertResTupleWith func (elem', level) = Map.insertWith func elem' level
-      insertResTuplesWith f tuples resMap 
-        = foldr (insertResTupleWith f) resMap tuples
-  in insertResTuplesWith (-) vulnTuples $ insertResTuplesWith (+) resTuples $ baseRes
-  
+resistancesFrom :: [Equipment] -> Map.Map Element Int
+resistancesFrom eq = T.makeResistanceMap resList vulnList
+  where resList = concat $ map eqResistances eq
+        vulnList = concat $ map eqVulnerabilities eq
+
+ 
 
 
 

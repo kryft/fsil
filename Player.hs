@@ -1,6 +1,6 @@
 module Player where
 
-import Types
+import Types as T
 import Dice
 import Data.Map as Map
 
@@ -29,16 +29,13 @@ blankPlayer = Player { name = "",
                        protDice = [],
                        lightRadius = 0,
                        activeSongs = Quiet,
-                       resistances = noResistance,
+                       resistances = T.noResistance,
                        abilities = [],
                        equipment = [],
                        will = 0,
                        song = 0,
                        stealth = 0,
                        onLitSquare = False }
-
-noResistance = fromList [(Fire,0), (Cold,0), (Poison,0), (Lightning,0), 
-  (Dark,0)]
 
 singing :: Singing -> Player -> Player
 singing singing' p = p {activeSongs = singing'}
