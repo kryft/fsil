@@ -116,10 +116,14 @@ equippedItem = do
   --Just about any equipped item may grant protection
   maybeProtDice <- option Nothing (fmap (Just . snd) parseDefenseTuple) 
   --Skip possible stat bonus 
-  optional $ many spaceBar >> between (char '<') (char '>') (many $ noneOf ">")
   many spaceBar
+  optional $ between (char '<') (char '>') (many $ noneOf ">")
+  many spaceBar
+  --Skip possible inscription
+  optional $ between (char '{') (char '}') (many $ noneOf "}")
   --Only weapons have weight listed here (and we don't care about
   --weight for other items anyway)
+  many spaceBar
   maybeWeight <- option Nothing $ fmap Just parseWeight
   let isMeleeWeapon = isJust maybeWeight && slotType /= OtherSlot
   resistances <- lookAhead $ parseResistances

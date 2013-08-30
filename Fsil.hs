@@ -10,6 +10,7 @@ import qualified Types as T
 import Dice
 import qualified CombatState as CS
 import MonsterParser --ghci convenience
+import CharDumpParser --ghci convenience
 
 
 data FightStats = FightStats { damGiven :: Dist, 
@@ -18,6 +19,10 @@ data FightStats = FightStats { damGiven :: Dist,
                                opponent :: M.Monster
                              }
 
+
+summarize fs = (P.name (player fs)) ++ " vs " ++ (M.name (opponent fs)) 
+  ++ "; Mean damage taken: " ++ show (map mean (damTaken fs)) 
+  ++ "; Mean damage dealt: " ++ show ( mean (damGiven fs))
 
 toHitDist :: Int -> Int -> Dist
 toHitDist accuracy evasion = 
