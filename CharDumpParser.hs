@@ -129,7 +129,7 @@ equippedItem = do
   brands <- if isMeleeWeapon then lookAhead parseBrands else return []
   slays <- if isMeleeWeapon then lookAhead parseSlays else return []
   sharpness <- if isMeleeWeapon then lookAhead parseSharpness 
-                                else return NotSharp
+                                else return 1.0
   anyChar `manyTill` (lookAhead endItemDesc)
 
   return $ Equipment { eqName = stripSpacesAtEnd $ name,
@@ -223,8 +223,8 @@ parseItemAbilities = option [] $ itemDescScraper abilitySentence
     abilStart = mlString "It grants you the ability:" <|>
                 mlString "It grants you the abilities:"
 
-parseSharpness = option NotSharp $ itemDescScraper sharpSentence 
-  where sharpSentence = (mlString "cuts easily through armour" >> (return Sharp)) <|> (mlString "cuts very easily through armour" >> (return VerySharp))
+parseSharpness = option 1.0 $ itemDescScraper sharpSentence 
+  where sharpSentence = (mlString "cuts easily through armour" >> (return 0.5)) <|> (mlString "cuts very easily through armour" >> (return 0.0))
 
 
 --mlString parses str, but allows it to span multiple lines.
