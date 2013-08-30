@@ -2,7 +2,7 @@ module Player where
 
 import Types as T
 import Dice
-import Data.Map as Map
+import qualified Data.Map as Map
 
 --The base number by which the player's to-hit roll needs to exceed
 --a monster's evasion roll for a critical hit to occur.
@@ -48,19 +48,40 @@ isActiveSong song' player =
     WovenThemes (s1, s2) -> (s1 == song' || s2 == song') 
 
 
---Returns the effective song strength for the given Song:
---the player's song score if the player is currently singing that song
---(or song score - 5 if the song is a minor theme) and 0 otherwise.
---getSongValue :: Song -> Player -> Int
---getSongValue song' player =
---  case (activeSongs player) of 
---    Quiet -> 0
---    OneSong s -> 
---      if song' == s then (song player) else 0
---    WovenThemes (s1, s2) 
---      | s1 == song' -> song player
---      | s2 == song' -> (song player) - 5
---      | otherwise -> 0
+--Light strength on player's square (not including effects from
+--the environment or monsters)
+playerLight :: Player -> Int
+playerLight player = (lightRadius player) + 1 + innerLight 
+  where
+    innerLight = if InnerLight `elem` (abilities player)
+                  then 1 else 0
+
+applySongTrees :: Player -> Player
+applySongTrees p =
+  let extraLight = (getSongValue SongTrees p) `quot` 5
+      light = lightRadius p
+  in p {lightRadius = light + extraLight}
+
+applySongStay :: Player -> Player
+applySongStay p =
+  let extraProtSides = (getSongValue SongStay p) `quot` 3
+      newProt = (1 `d` extraProtSides) : (protDice p)
+      extraWill = extraProtSides
+      newWill = (will p) + extraWill
+  in p {protDice = newProt, will = newWill}
+
+applySongSharp :: Player -> Player
+applySongSharp p =
+  let sharpnessBonus = min 6 $ getSongValue SongSharp p
+      extraSharpness = 6.0 / (fromIntegral sharpnessBonus)
+      newAttacks = map multiplySharpness (attacks p) :: [Attack]
+      multiplySharpness a = 
+        a {T.sharpness = (T.sharpness a) * extraSharpness}
+  in p {attacks = newAttacks}
+
+
+dungeonLight :: Player -> Int
+dungeonLight p = if (onLitSquare p) then 1 else 0
 
 modifyEvasionWith :: (Int -> Int) -> Player -> Player 
 modifyEvasionWith func player = player {evasion = func $ evasion player}
@@ -70,6 +91,22 @@ modifyAccuracyWith func player =
   let newAttacks = Prelude.map (adjustAccuracy func) (attacks player)
       adjustAccuracy func attack = attack { accuracy = func $ accuracy attack}
   in player {attacks = newAttacks}
+
+     
+
+--Returns the effective song strength for the given Song:
+--the player's song score if the player is currently singing that song
+--(or song score - 5 if the song is a minor theme) and 0 otherwise.
+getSongValue :: Song -> Player -> Int
+getSongValue song' player =
+  case (activeSongs player) of 
+    Quiet -> 0
+    OneSong s -> 
+      if song' == s then (song player) else 0
+    WovenThemes (s1, s2) 
+      | s1 == song' -> max 0 $ song player
+      | s2 == song' -> max 0 $ (song player) - 5
+      | otherwise -> 0
 
 playerCritThres :: [Ability] -> Double -> Double
 playerCritThres abilities weaponWeight =
