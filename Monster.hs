@@ -33,6 +33,7 @@ data Monster = Monster { name :: String,
                          protDice :: Dice,
                          speed :: Int,
                          hatesLight :: Bool,
+                         glows :: Bool,
                          seenByPlayer :: Bool, 
                          resistances :: Map.Map Element Int,
                          criticalRes :: MonsterCritRes,
@@ -41,6 +42,7 @@ data Monster = Monster { name :: String,
                        } deriving Show
 
 
+dungeonLight m = if onLitSquare m then 1 else 0
 
 matchMonster :: String -> Monster -> Bool
 matchMonster regex mons = (name mons) =~ regex
@@ -49,6 +51,15 @@ baseCritThreshold = 7.0
 
 monsterCritThreshold :: Dice -> Double
 monsterCritThreshold dice = baseCritThreshold + 2 * fromIntegral (nDice dice)
+
+modifyEvasionWith :: (Int -> Int) -> Monster -> Monster 
+modifyEvasionWith func monster = monster {evasion = func $ evasion monster}
+
+modifyAccuracyWith :: (Int -> Int) -> Monster -> Monster
+modifyAccuracyWith func monster =
+  let newAttacks = Prelude.map (adjustAccuracy func) (attacks monster)
+      adjustAccuracy func attack = attack { accuracy = func $ accuracy attack}
+  in monster {attacks = newAttacks}
 
 
 --Finds the first monster in monsList whose name matches nameRegex.

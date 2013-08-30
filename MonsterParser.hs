@@ -48,7 +48,7 @@ monsterEntry = try $
         spaces 
         return attack
 
-    (critRes,resistances,hatesLight,slainBy) <- flagsField
+    (critRes,resistances,hatesLight,slainBy,glows) <- flagsField
     anyChar `manyTill` try endOfMonsterEntry
     return $ M.Monster { M.name = name,
                        M.speed = speed,
@@ -57,6 +57,7 @@ monsterEntry = try $
                        M.attacks = attacks,
                        M.lightRadius = lightRadius,
                        M.hatesLight = hatesLight,
+                       M.glows = glows,
                        M.seenByPlayer = True,
                        M.resistances = resistances,
                        M.criticalRes = critRes,
@@ -138,15 +139,15 @@ attackField =
                      canCrit = canCrit,
                      alwaysHits = alwaysHits}
 
-parseAttackEffects :: Parser ([Element], Sharpness, Bool, Bool)
+parseAttackEffects :: Parser ([Element], Double, Bool, Bool)
 parseAttackEffects =
   do
     (alwaysHits,sharpness,canCrit) <- subField $ 
-      (try (string "CRAWL") >> return (False,Sharp, True)) <|>
-      (try (string "ENGULF") >> return (False,NotSharp, False)) <|>
-      (try (string "TOUCH") >> return (False,VerySharp, False)) <|>
-      (try (string "SPORE") >> return (True,VerySharp, False)) <|>
-      (anySubField >> return (False,NotSharp,True))
+      (try (string "CRAWL") >> return (False,0.5, True)) <|>
+      (try (string "ENGULF") >> return (False,1.0, False)) <|>
+      (try (string "TOUCH") >> return (False,0.0, False)) <|>
+      (try (string "SPORE") >> return (True,0.0, False)) <|>
+      (anySubField >> return (False,1.0,True))
     brands <- option [] (try $ subField $ 
       (try (string "FIRE") >> return [Fire]) <|>
       (try (string "COLD") >> return [Cold]) <|>
@@ -159,7 +160,7 @@ parseAttackEffects =
     return (brands, sharpness, canCrit, alwaysHits)
 
 
-flagsField :: Parser (M.MonsterCritRes, Map.Map Element Int, Bool, Maybe Slay)
+flagsField :: Parser (M.MonsterCritRes, Map.Map Element Int, Bool, Maybe Slay, Bool)
 flagsField = do
   string "F:" <?> "start of flags field"
   flags <- flag `sepBy` try flagSep 
@@ -171,7 +172,8 @@ flagsField = do
       resMap = T.makeResistanceMap resList vulnList
       maybeSlainBy = slayFromFlags flags
       hatesLight = "HURT_LITE" `elem` flags
-  return (critRes, resMap, hatesLight, maybeSlainBy)
+      glows = "GLOW" `elem` flags
+  return (critRes, resMap, hatesLight, maybeSlainBy, glows)
     where
     flag = many1 (upper <|> char '_')
     flagSep = try (spaces >> char '|' >> spaces >> return "|") <|> 

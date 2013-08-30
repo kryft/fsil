@@ -40,7 +40,7 @@ data Equipment = Equipment
     --The last three are only relevant for weapons
     eqBrands :: [Element], 
     eqSlays :: [Slay], 
-    eqSharpness :: Sharpness 
+    eqSharpness :: Double 
   }
   deriving (Show, Eq)
 
@@ -64,9 +64,6 @@ makeResistanceMap resList vulnList =
   in insertResTuplesWith (-) vulnTuples $ insertResTuplesWith (+) resTuples $ baseRes
  
 
-data Sharpness = NotSharp | Sharp | VerySharp
-  deriving (Eq, Show)
-
 
 data Slay = SlayOrcs | SlayRaukar | SlayDragons | SlaySpiders | SlayWolves 
   | SlayUndead | SlayTrolls
@@ -76,7 +73,9 @@ data Attack = Attack { accuracy :: Int,
                        damage :: Dice,
                        brands :: [Element],
                        slays :: [Slay],
-                       sharpness :: Sharpness,
+                       --sharpness is just the modifier by which the target's
+                       --protection roll is multiplied
+                       sharpness :: Double,
                        critThreshold :: Double,
                        canCrit :: Bool,
                        alwaysHits :: Bool}
