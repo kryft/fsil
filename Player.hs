@@ -37,8 +37,18 @@ blankPlayer = Player { name = "",
                        stealth = 0,
                        onLitSquare = False }
 
+
+hasEmptyOffHand :: Player -> Bool
+hasEmptyOffHand p = (T.eqName offHandItem) == "(nothing)"
+  where 
+    offHandItem = head $ filter isOffHand (equipment p)
+    isOffHand x = (T.eqSlot x) == T.OffHand
+
 singing :: Singing -> Player -> Player
 singing singing' p = p {activeSongs = singing'}
+
+withAbilities :: [T.Ability] -> Player -> Player
+withAbilities as p = p {abilities = (abilities p) ++ as}
 
 isActiveSong :: Song -> Player -> Bool
 isActiveSong song' player =
@@ -47,6 +57,8 @@ isActiveSong song' player =
     OneSong s -> song' == s
     WovenThemes (s1, s2) -> (s1 == song' || s2 == song') 
 
+hasAbility :: Player -> Ability -> Bool
+hasAbility p a = a `elem` (abilities p)
 
 --Light strength on player's square (not including effects from
 --the environment or monsters)
@@ -92,6 +104,13 @@ modifyAccuracyWith func player =
       adjustAccuracy func attack = attack { accuracy = func $ accuracy attack}
   in player {attacks = newAttacks}
 
+modifyCritThreshold :: (Double -> Double) -> Player -> Player
+modifyCritThreshold func player = 
+  let newAttacks = Prelude.map (adjustCritThres func) (attacks player)
+      adjustCritThres f a = a { critThreshold = f $ critThreshold a }
+  in player {attacks = newAttacks}
+
+
      
 
 --Returns the effective song strength for the given Song:
@@ -108,17 +127,17 @@ getSongValue song' player =
       | s2 == song' -> max 0 $ (song player) - 5
       | otherwise -> 0
 
-playerCritThres :: [Ability] -> Double -> Double
-playerCritThres abilities weaponWeight =
-  let base = playerBaseCritThres + weaponWeight
-      finesse = if Finesse `elem` abilities
+playerCritMods :: Player -> Double
+playerCritMods player =
+  let finesse = if player `hasAbility` T.Finesse
                   then -1.0
                   else 0
-      subtlety = if Subtlety `elem` abilities
+      subtlety = if player `hasAbility` T.Subtlety 
+                    && hasEmptyOffHand player
                    then -2.0
                    else 0
-      power = if Power `elem` abilities
+      power = if player `hasAbility` T.Power
                 then 1.0
                 else 0
-  in base + finesse + subtlety + power
+  in finesse + subtlety + power
 

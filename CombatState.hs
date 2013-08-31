@@ -29,6 +29,7 @@ applyCombatModifiers = do
   applyHardiness
   applyAlertness
   applyBrands
+  applyCritAbilities
   applyCritRes
 
 divBy x y =  y `quot` x
@@ -49,21 +50,25 @@ monsterNetLight p m =
           | M.lightRadius m > 0 = M.lightRadius m + 1
           | otherwise = 0
 
+applyCritAbilities :: CombatState ()
+applyCritAbilities = do
+  (p,_) <- get
+  let critMod = P.playerCritMods p 
+  modifyPlayer $ P.modifyCritThreshold (+ critMod)
+    
+
+
 
 applyCritRes :: CombatState ()
 applyCritRes = do
   (p,m) <- get
-  when (T.CritRes `elem` (P.abilities p)) $ do
-    let mAttacks = map increaseCritThreshold (M.attacks m)
-        penalty = fromIntegral $ max 0 $ (P.will p) `quot` 5
-        increaseCritThreshold a =  a {T.critThreshold = (T.critThreshold a) + penalty}
-    modifyMonster $ \m -> m {M.attacks = mAttacks}
+  when (p `P.hasAbility` T.CritRes) $ do
+    let penalty = fromIntegral $ max 0 $ (P.will p) `quot` 5
+    modifyMonster $ M.modifyCritThreshold (+ penalty)
   --Doubling the critical threshold is equivalent with halving the number
   --of crit bonus dice and rounding downwards.
   when (M.CritResistant == M.criticalRes m) $ do
-    let pAttacks = map doubleCritThreshold (P.attacks p)
-        doubleCritThreshold a = a {T.critThreshold = 2.0 * (T.critThreshold a)}
-    modifyPlayer $ \p -> p {P.attacks = pAttacks}
+    modifyPlayer $ P.modifyCritThreshold (* 2)
   when (M.CritImmune == M.criticalRes m) $ do
     let pAttacks = map setNoCrit (P.attacks p)
         setNoCrit a = a {T.canCrit = False} 
@@ -72,7 +77,8 @@ applyCritRes = do
 applyAssassination :: CombatState ()
 applyAssassination = do
   (p,m) <- get
-  when ((M.seenByPlayer m) && M.Sleeping == M.alertness m) $
+  when ((M.seenByPlayer m) && M.Sleeping == M.alertness m
+          && p `P.hasAbility` T.Assassination) $
     modifyPlayer $ P.modifyAccuracyWith (+ (P.stealth p))
 
 
@@ -114,7 +120,7 @@ applyHardiness = do
       extraProtSides =  (P.will p) `quot` 6
       extraProt = 1 `d` extraProtSides
       updatedProt = extraProt : currentProt
-  when (T.Hardiness `elem` (P.abilities p)) $
+  when (p `P.hasAbility` T.Hardiness) $
     modifyPlayer $ \p -> p {P.protDice = updatedProt}
 
 

@@ -3,7 +3,9 @@ import Control.Monad.State
 import Numeric
 import Data.List (concat)
 import qualified Numeric.Probability.Distribution as D
+import Numeric.Probability.Distribution((??))
 import qualified Monster as M
+import Monster(getMonster)
 import qualified Player as P
 import qualified Data.Map as Map
 import qualified Types as T

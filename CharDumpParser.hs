@@ -1,4 +1,4 @@
-module CharDumpParser where
+module CharDumpParser (readCharDump, charDumpFile) where
 
 import Text.Parsec
 import Data.Char(isSpace)
@@ -319,7 +319,7 @@ makeAttacks attackTuples abilities equipment =
 makeAttack :: [Ability] -> (Equipment, (Int, Dice)) -> Attack
 makeAttack abilities (weapon, (accuracy, damDice)) =
   let weaponWeight = fromJust $ eqWeight weapon 
-      critThres = P.playerCritThres abilities weaponWeight
+      critThres = P.playerBaseCritThres + weaponWeight
       brands = eqBrands weapon
       slays = eqSlays weapon
       sharpness = eqSharpness weapon

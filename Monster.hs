@@ -19,11 +19,9 @@ unseen m = m {seenByPlayer = False}
 
 sleeping :: Monster -> Monster
 sleeping m = m { alertness = Sleeping }
---sleeping m = m {evasion = -5}
 
 unwary :: Monster -> Monster
 unwary m = m {alertness = Unwary}
---unwary m = m {evasion = truncate $ (evasion m) / 2}
 
 data Monster = Monster { name :: String, 
                          attacks :: [Attack], 
@@ -60,6 +58,13 @@ modifyAccuracyWith func monster =
   let newAttacks = Prelude.map (adjustAccuracy func) (attacks monster)
       adjustAccuracy func attack = attack { accuracy = func $ accuracy attack}
   in monster {attacks = newAttacks}
+
+modifyCritThreshold :: (Double -> Double) -> Monster -> Monster
+modifyCritThreshold func monster = 
+  let newAttacks = Prelude.map (adjustCritThres func) (attacks monster)
+      adjustCritThres f a = a { critThreshold = f $ critThreshold a }
+  in monster {attacks = newAttacks}
+
 
 
 --Finds the first monster in monsList whose name matches nameRegex.
