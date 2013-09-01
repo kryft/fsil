@@ -13,8 +13,9 @@ import qualified Data.Map as Map
 import qualified Types as T
 import Dice
 import qualified CombatState as CS
-import MonsterParser --ghci convenience
-import CharDumpParser --ghci convenience
+import MonsterParser 
+import CharDumpParser
+import CommandLineArgs as CLA
 
 
 data FightStats = FightStats { damGiven :: Dist, 
@@ -120,27 +121,36 @@ fight player monster =
 
 summarize :: FightStats -> String
 summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs) 
+   ++ "\nPlayer dark resistance: " 
+   ++ show ( (P.resistances $ player fs) Map.! T.Dark)
+   ++ "\nPlayer singing: "
+   ++ show (P.activeSongs $ player fs)
+   ++ "\nMonster alertness: "
+   ++ show (M.alertness $ opponent fs)
+   ++ "\nPlayer sees monster: " ++ show ( M.seenByPlayer $ opponent fs )
    ++ "\nDamage dealt by monster: mean " 
-    ++ show ( map mean (damTaken fs))
-  ++ ", standard deviation " 
-    ++ show (  map std (damTaken fs))
-  ++ "\nProbability of dealing at least x damage: \n" 
-    ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
-  ++ "\n\nDamage dealt by player: mean " 
-    ++ show (mean (damGiven fs))
-  ++ ", standard deviation " ++ show (std (damGiven fs))
-  ++ "\nProbability of getting at least n critical hits: \n" 
-    ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
-  ++ "\nProbability of dealing at least X% (of max hp) damage: \n" 
-    ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
-  ++ "\nProbability of dealing at least x damage: \n" 
-    ++ (printCDF 3 $ ccdf 1 (damGiven fs) )
+   ++ show ( map mean (damTaken fs))
+   ++ ", standard deviation " 
+   ++ show (  map std (damTaken fs))
+   ++ "\nProbability of dealing at least x damage: \n" 
+   ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
+   ++ "\n\nDamage dealt by player: mean " 
+   ++ show (mean (damGiven fs))
+   ++ ", standard deviation " ++ show (std (damGiven fs))
+   ++ "\nProbability of getting at least n critical hits: \n" 
+   ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
+   ++ "\nProbability of dealing at least X% (of max hp) damage: \n" 
+   ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
+   ++ "\nProbability of dealing at least x damage: \n" 
+   ++ (printCDF 3 $ ccdf 1 (damGiven fs) )
  where
-    
 
 main = do
-  charDumpFile:monsterName:restArgs <- getArgs
-  player <- readCharDump charDumpFile
+  fsilOptions <- CLA.parseArgs
+  player <- readCharDump (CLA.charDumpFile fsilOptions)
+  let player' = P.singing (CLA.singing fsilOptions) player
+      monsterName = CLA.monsterName fsilOptions
+      alertness = CLA.alertness fsilOptions
   monsters <- parseMonsterFile "monster.txt"
-  let monster = M.getMonster monsterName monsters
-  putStr . summarize $ fight player monster
+  let monster = (M.getMonster monsterName monsters) {M.alertness = alertness}
+  putStr . summarize $ fight player' monster
