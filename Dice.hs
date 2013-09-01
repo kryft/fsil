@@ -9,7 +9,12 @@ module Dice (Dice(ZeroDie),
              mean, 
              std, 
              pprint, 
-             addDice) where 
+             printCDF, 
+             addDice,
+             cdf,
+             ccdf,
+             maxD,
+             minD) where 
 
 import Control.Monad
 import Control.Applicative
@@ -82,9 +87,30 @@ mean d = D.expected $ fmap fromIntegral d
 std :: Dist -> Float
 std d = D.stdDev $ fmap fromIntegral d
 
+minD :: Dist -> Int
+minD = minimum . (map fst) . D.decons
+
+maxD :: Dist -> Int
+maxD = maximum . (map fst) . D.decons
+
+cdf :: Int -> Dist -> [(Int, Float)]
+cdf interval d =
+  let minVal = minD d
+      maxVal = maxD d
+      values = [minVal,minVal+interval .. maxVal]
+      probabilities = map (\v -> (< v) D.?? d) values
+  in zip values probabilities
 
 
-pprint :: Dice -> Int -> [String]
-pprint d decimals =  map printPair $ (D.sortElem . D.decons . D.norm) (dist d)
+ccdf :: Int -> Dist -> [(Int, Float)]
+ccdf i d = map (\(x,p) -> (x,1-p)) $ cdf i d
+
+pprint :: Int -> Dist -> String
+pprint decimals d = unlines $ map printPair $ (D.sortElem . D.decons . D.norm) d
+  where
+  printPair (x,p) = show x ++ " " ++ showFFloat (Just decimals) p ""
+
+printCDF :: Int -> [(Int, Float)] -> String 
+printCDF decimals c = unlines $ map printPair $ c
   where
   printPair (x,p) = show x ++ " " ++ showFFloat (Just decimals) p ""

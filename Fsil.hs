@@ -16,15 +16,13 @@ import CharDumpParser --ghci convenience
 
 
 data FightStats = FightStats { damGiven :: Dist, 
+                               critsGiven :: [Dist],
+                               damGivenPercent :: Dist, 
                                damTaken :: [Dist], 
                                player :: P.Player, 
                                opponent :: M.Monster
                              }
 
-
-summarize fs = (P.name (player fs)) ++ " vs " ++ (M.name (opponent fs)) 
-  ++ "; Mean damage taken: " ++ show (map mean (damTaken fs)) 
-  ++ "; Mean damage dealt: " ++ show ( mean (damGiven fs))
 
 toHitDist :: Int -> Int -> Dist
 toHitDist accuracy evasion = 
@@ -48,8 +46,8 @@ damageDist damDice sharpness protDiceList =
     let modifiedProt = floor $ fromIntegral protection * sharpness
     return $ max 0 (damage - modifiedProt)
 
-attackDist :: T.Attack -> Int -> [Dice] -> Dist
-attackDist attack evasion protDice =
+attackDamDist :: T.Attack -> Int -> [Dice] -> Dist
+attackDamDist attack evasion protDice =
   do
    toHit <- if (T.alwaysHits attack)
      then return 1
@@ -64,13 +62,35 @@ attackDist attack evasion protDice =
                        else 0
      D.norm $ damageDist damDice sharpness protDice
 
-attackSeqDist :: [T.Attack] -> Int -> [Dice] -> Dist
-attackSeqDist [] _ _ = return 0
-attackSeqDist (a:as) evasion protDice =
+attackSeqDamDist :: [T.Attack] -> Int -> [Dice] -> Dist
+attackSeqDamDist [] _ _ = return 0
+attackSeqDamDist (a:as) evasion protDice = 
   do
-    damRest <- attackSeqDist as evasion protDice
-    dam <- attackDist a evasion protDice
+    damRest <- attackSeqDamDist as evasion protDice
+    dam <- attackDamDist a evasion protDice
     D.norm $ return $ dam + damRest
+
+attackNCritsDist :: T.Attack -> Int -> Dist
+attackNCritsDist attack evasion =
+  do
+   toHit <- D.norm $ toHitDist (T.accuracy attack) evasion
+   let nCritDice = if (T.canCrit attack)
+                   then nCrits (T.critThreshold attack) toHit
+                   else 0
+   return nCritDice
+
+attackSeqNCritsDist :: [T.Attack] -> Int -> [Dist]
+attackSeqNCritsDist [] _ = []
+attackSeqNCritsDist (a:as) evasion =
+  (attackNCritsDist a evasion) : attackSeqNCritsDist as evasion
+
+damDistPercent :: Dist -> M.Monster -> Dist
+damDistPercent damDist m =
+  do
+    maxHP <- dist (M.health m)
+    damage <- damDist
+    D.norm $ return $ 100 - (100 * (maxHP - damage)) `quot` maxHP
+
 
 fight :: P.Player -> M.Monster -> FightStats
 fight player monster =

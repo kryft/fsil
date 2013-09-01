@@ -57,6 +57,7 @@ monsterEntry = try $
                        M.attacks = attacks,
                        M.lightRadius = lightRadius,
                        M.hatesLight = hatesLight,
+                       M.health = health,
                        M.glows = glows,
                        M.seenByPlayer = True,
                        M.resistances = resistances,
