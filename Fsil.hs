@@ -1,3 +1,5 @@
+module Main where
+import System.Environment
 import Control.Monad
 import Control.Monad.State
 import Numeric
@@ -101,14 +103,44 @@ fight player monster =
       mAttacks = M.attacks m
       mEv = M.evasion m
       mProt = M.protDice m
-      damGiven = attackSeqDist pAttacks mEv [mProt]
+      damGiven = attackSeqDamDist pAttacks mEv [mProt]
+      damGivenPercent = damDistPercent damGiven monster
+      critsGiven = attackSeqNCritsDist pAttacks mEv
       --When a monster has several attacks, they're mutually exclusive
       --alternatives, so compute separate distributions for each
       damTaken = map distForOneAttack mAttacks
-      distForOneAttack a = attackDist a pEv pProt
+      distForOneAttack a = attackDamDist a pEv pProt
   in
       FightStats { damGiven = damGiven, 
+                   damGivenPercent = damGivenPercent,
+                   critsGiven = critsGiven,
                  damTaken = damTaken, 
                  player = p, 
                  opponent = m}
 
+summarize :: FightStats -> String
+summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs) 
+   ++ "\nDamage dealt by monster: mean " 
+    ++ show ( map mean (damTaken fs))
+  ++ ", standard deviation " 
+    ++ show (  map std (damTaken fs))
+  ++ "\nProbability of dealing at least x damage: \n" 
+    ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
+  ++ "\n\nDamage dealt by player: mean " 
+    ++ show (mean (damGiven fs))
+  ++ ", standard deviation " ++ show (std (damGiven fs))
+  ++ "\nProbability of getting at least n critical hits: \n" 
+    ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
+  ++ "\nProbability of dealing at least X% (of max hp) damage: \n" 
+    ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
+  ++ "\nProbability of dealing at least x damage: \n" 
+    ++ (printCDF 3 $ ccdf 1 (damGiven fs) )
+ where
+    
+
+main = do
+  charDumpFile:monsterName:restArgs <- getArgs
+  player <- readCharDump charDumpFile
+  monsters <- parseMonsterFile "monster.txt"
+  let monster = M.getMonster monsterName monsters
+  putStr . summarize $ fight player monster
