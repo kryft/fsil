@@ -1,6 +1,8 @@
 module CommandLineArgs (FsilOptions,
                         charDumpFile,
                         monsterName,
+                        evBonus,
+                        meleeBonus,
                         singing,
                         alertness,
                         parseArgs) where
@@ -15,18 +17,23 @@ import Text.Parsec.String (Parser)
 import qualified Types as T
 import qualified Monster as M
 import Data.Either(partitionEithers)
+import GeneralParse as G
 
 data FsilOptions =
   FsilOptions { charDumpFile :: String,
                 monsterName :: String,
                 singing :: T.Singing,
-                alertness :: M.Alertness }
+                alertness :: M.Alertness,
+                meleeBonus :: Int,
+                evBonus :: Int}
 
 defaultOptions = 
   FsilOptions { charDumpFile = "",
                 monsterName = "",
                 singing = T.Quiet,
-                alertness = M.Alert}
+                alertness = M.Alert,
+                meleeBonus = 0,
+                evBonus = 0}
 
 
 options :: [OptDescr (FsilOptions -> IO FsilOptions )]
@@ -43,11 +50,24 @@ options =
         >>= \s -> return opt {alertness = s}) 
       "ALERTNESS") 
     "set monster alertness; ALERTNESS = unwary | sleeping"
+  , Option [] ["evbonus"] 
+    (ReqArg 
+      (\arg opt -> parseStr arg G.parseInt
+        >>= \s -> return opt {evBonus = s}) 
+      "EV_BONUS") 
+    "Evasion bonus for the player (integer)"
+   , Option [] ["meleebonus"] 
+    (ReqArg 
+      (\arg opt -> parseStr arg G.parseInt 
+        >>= \s -> return opt {meleeBonus = s}) 
+      "MELEE_BONUS") 
+    "Melee bonus for the player (integer)"
  ]
 
 header :: String
 header = 
-  "Usage: Fsil [-s SONG[,SONG]] [-m ALERTNESS] CHAR_DUMP_FILE MONSTER_NAME"
+  "Usage: Fsil [-s SONG[,SONG]] [-m ALERTNESS] [--evbonus EV_BONUS] \
+    \[--meleebonus MELEE_BONUS] CHAR_DUMP_FILE MONSTER_NAME"
 
 parseStr :: String -> Parser a -> IO a
 parseStr str parser = do

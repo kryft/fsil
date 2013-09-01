@@ -1,4 +1,15 @@
-module Main where
+module Main (fight,
+             FightStats,
+             damGiven,
+             critsGiven,
+             damGivenPercent,
+             damTaken,
+             player,
+             opponent,
+             readCharDump,
+             parseMonsterFile,
+             main)
+             where
 import System.Environment
 import Control.Monad
 import Control.Monad.State
@@ -148,7 +159,12 @@ summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs)
 main = do
   fsilOptions <- CLA.parseArgs
   player <- readCharDump (CLA.charDumpFile fsilOptions)
-  let player' = P.singing (CLA.singing fsilOptions) player
+  let singing' = CLA.singing fsilOptions
+      meleeBonus = CLA.meleeBonus fsilOptions
+      evBonus = CLA.evBonus fsilOptions
+      player' = (P.modifyAccuracyWith (+ meleeBonus))
+        . (P.modifyEvasionWith (+ evBonus))
+        . (P.singing singing') $ player
       monsterName = CLA.monsterName fsilOptions
       alertness = CLA.alertness fsilOptions
   monsters <- parseMonsterFile "monster.txt"
