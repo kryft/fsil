@@ -1,6 +1,6 @@
 module GeneralParse where
 
-import Dice (Dice(ZeroDie), d)
+import Rdice (Dice(ZeroDie), d)
 import Numeric (readFloat)
 import Text.Parsec
 import Text.Parsec.String (Parser, parseFromFile)

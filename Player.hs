@@ -1,7 +1,7 @@
 module Player where
 
 import Types as T
-import Dice
+import Rdice
 import qualified Data.Map as Map
 
 --The base number by which the player's to-hit roll needs to exceed

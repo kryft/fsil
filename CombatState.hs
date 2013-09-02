@@ -4,7 +4,7 @@ import qualified Monster as M
 import qualified Player as P
 import qualified Data.Map as Map
 import Types as T
-import Dice
+import Rdice
 import Control.Monad.State
 import Control.Monad
 import Data.Maybe(isJust,fromJust)

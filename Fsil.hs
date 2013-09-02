@@ -1,13 +1,15 @@
+{-# LANGUAGE BangPatterns #-}
 module Main (fight,
              FightStats,
              damGiven,
-             critsGiven,
+             --critsGiven,
              damGivenPercent,
-             damTaken,
+             --damTaken,
              player,
              opponent,
              readCharDump,
              parseMonsterFile,
+             getMonster,
              main)
              where
 import System.Environment
@@ -22,23 +24,26 @@ import Monster(getMonster)
 import qualified Player as P
 import qualified Data.Map as Map
 import qualified Types as T
-import Dice
+import Rdice
 import qualified CombatState as CS
 import MonsterParser 
 import CharDumpParser
 import CommandLineArgs as CLA
+import qualified Numeric.Probability.Random as R
+import qualified Numeric.Probability.Transition as TR
+import qualified Numeric.Probability.Simulation as S
 
 
 data FightStats = FightStats { damGiven :: Dist, 
-                               critsGiven :: [Dist],
+ --                              critsGiven :: [Dist],
                                damGivenPercent :: Dist, 
-                               damTaken :: [Dist], 
+--                               damTaken :: [Dist], 
                                player :: P.Player, 
                                opponent :: M.Monster
                              }
 
 
-toHitDist :: Int -> Int -> Dist
+toHitDist :: Int -> Int -> RInt
 toHitDist accuracy evasion = 
   do 
     toHitRoll <- dist $ 1 `d` 20
@@ -52,61 +57,63 @@ nCrits criticalThreshold toHitRoll
   | otherwise =
     floor $ (fromIntegral toHitRoll + 0.4) / criticalThreshold
 
-damageDist :: Dice -> Double -> [Dice] -> Dist
+damageDist :: Dice -> Double -> [Dice] -> RInt
 damageDist damDice sharpness protDiceList =
   do
-    damage <- dist damDice
-    protection <- sumDiceDists protDiceList
+    damage <-  dist damDice
+    protection <-  sumDiceDists protDiceList
     let modifiedProt = floor $ fromIntegral protection * sharpness
     return $ max 0 (damage - modifiedProt)
 
-attackDamDist :: T.Attack -> Int -> [Dice] -> Dist
+attackDamDist :: T.Attack -> Int -> [Dice] -> RInt
 attackDamDist attack evasion protDice =
   do
    toHit <- if (T.alwaysHits attack)
      then return 1
-     else D.norm $ toHitDist (T.accuracy attack) evasion
+     else toHitDist (T.accuracy attack) evasion
    if toHit < 1 then
-     D.certainly 0
+     return 0
    else do
      let damDice = addDice nCritDice (T.damage attack)
          sharpness = T.sharpness attack
          nCritDice = if (T.canCrit attack)
                        then nCrits (T.critThreshold attack) toHit
                        else 0
-     D.norm $ damageDist damDice sharpness protDice
+     damageDist damDice sharpness protDice
 
-attackSeqDamDist :: [T.Attack] -> Int -> [Dice] -> Dist
+attackSeqDamDist :: [T.Attack] -> Int -> [Dice] -> RInt
 attackSeqDamDist [] _ _ = return 0
 attackSeqDamDist (a:as) evasion protDice = 
   do
     damRest <- attackSeqDamDist as evasion protDice
     dam <- attackDamDist a evasion protDice
-    D.norm $ return $ dam + damRest
+    return $ dam + damRest
 
-attackNCritsDist :: T.Attack -> Int -> Dist
+attackNCritsDist :: T.Attack -> Int -> RInt
 attackNCritsDist attack evasion =
   do
-   toHit <- D.norm $ toHitDist (T.accuracy attack) evasion
+   toHit <- toHitDist (T.accuracy attack) evasion
    let nCritDice = if (T.canCrit attack)
                    then nCrits (T.critThreshold attack) toHit
                    else 0
    return nCritDice
 
-attackSeqNCritsDist :: [T.Attack] -> Int -> [Dist]
+attackSeqNCritsDist :: [T.Attack] -> Int -> [RInt]
 attackSeqNCritsDist [] _ = []
 attackSeqNCritsDist (a:as) evasion =
   (attackNCritsDist a evasion) : attackSeqNCritsDist as evasion
 
-damDistPercent :: Dist -> M.Monster -> Dist
+damDistPercent :: RInt -> M.Monster -> RInt
 damDistPercent damDist m =
   do
     maxHP <- dist (M.health m)
     damage <- damDist
-    D.norm $ return $ 100 - (100 * (maxHP - damage)) `quot` maxHP
+    return $ 100 - (100 * (maxHP - damage)) `quot` maxHP
 
 
-fight :: P.Player -> M.Monster -> FightStats
+nSamples = 10000 :: Int
+
+fight :: P.Player -> M.Monster -> IO FightStats
 fight player monster =
   let (_,(p,m)) = runState CS.applyCombatModifiers (player,monster)
       pAttacks = P.attacks p
@@ -115,18 +122,23 @@ fight player monster =
       mAttacks = M.attacks m
       mEv = M.evasion m
       mProt = M.protDice m
-      damGiven = attackSeqDamDist pAttacks mEv [mProt]
-      damGivenPercent = damDistPercent damGiven monster
-      critsGiven = attackSeqNCritsDist pAttacks mEv
+      damGiven' = attackSeqDamDist pAttacks mEv [mProt]
+      damGivenPercent' = damDistPercent damGiven' monster
+--      critsGiven' = attackSeqNCritsDist pAttacks mEv
       --When a monster has several attacks, they're mutually exclusive
       --alternatives, so compute separate distributions for each
-      damTaken = map distForOneAttack mAttacks
+ --     damTaken' = map distForOneAttack mAttacks
       distForOneAttack a = attackDamDist a pEv pProt
-  in
-      FightStats { damGiven = damGiven, 
+  in 
+    do
+      damGiven <- simulate nSamples $ damGiven'
+      damGivenPercent <- simulate nSamples $ damGivenPercent'
+  --    critsGiven <- [simulate nSamples d | d <- critsGiven']
+   --   damTaken <- [simulate nSamples d | d <- damTaken']
+      return $ FightStats { damGiven = damGiven, 
                    damGivenPercent = damGivenPercent,
-                   critsGiven = critsGiven,
-                 damTaken = damTaken, 
+                   --critsGiven = critsGiven,
+                -- damTaken = damTaken, 
                  player = p, 
                  opponent = m}
 
@@ -134,22 +146,23 @@ summarize :: FightStats -> String
 summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs) 
    ++ "\nPlayer dark resistance: " 
    ++ show ( (P.resistances $ player fs) Map.! T.Dark)
+   ++ "\n" ++ show (P.attacks $ player fs)
    ++ "\nPlayer singing: "
    ++ show (P.activeSongs $ player fs)
    ++ "\nMonster alertness: "
    ++ show (M.alertness $ opponent fs)
    ++ "\nPlayer sees monster: " ++ show ( M.seenByPlayer $ opponent fs )
    ++ "\nDamage dealt by monster: mean " 
-   ++ show ( map mean (damTaken fs))
+--   ++ show ( map mean (damTaken fs))
    ++ ", standard deviation " 
-   ++ show (  map std (damTaken fs))
+--   ++ show (  map std (damTaken fs))
    ++ "\nProbability of dealing at least x damage: \n" 
-   ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
+--   ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
    ++ "\n\nDamage dealt by player: mean " 
    ++ show (mean (damGiven fs))
    ++ ", standard deviation " ++ show (std (damGiven fs))
    ++ "\nProbability of getting at least n critical hits: \n" 
-   ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
+--   ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
    ++ "\nProbability of dealing at least X% (of max hp) damage: \n" 
    ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
    ++ "\nProbability of dealing at least x damage: \n" 
@@ -169,4 +182,5 @@ main = do
       alertness = CLA.alertness fsilOptions
   monsters <- parseMonsterFile "monster.txt"
   let monster = (M.getMonster monsterName monsters) {M.alertness = alertness}
-  putStr . summarize $ fight player' monster
+  fightStats <- fight player' monster
+  putStr . summarize $ fightStats

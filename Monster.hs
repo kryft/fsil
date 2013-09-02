@@ -1,7 +1,7 @@
 module Monster where
 
 import qualified Data.Map as Map
-import Dice
+import Rdice
 import Types
 import Text.Regex.Posix ((=~))
 --import Data.List(filter,null)

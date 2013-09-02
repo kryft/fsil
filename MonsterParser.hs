@@ -3,7 +3,7 @@ module MonsterParser (parseMonsterFile) where
 import Text.Parsec
 import Text.Parsec.String (Parser, parseFromFile)
 import qualified Monster as M
-import Dice (Dice(ZeroDie), d)
+import Rdice (Dice(ZeroDie), d)
 import GeneralParse
 import Types as T
 import qualified Data.Map as Map

@@ -7,7 +7,7 @@ import qualified Player as P
 import Data.List (concat, group)
 import Data.Maybe (catMaybes, fromJust, isJust)
 import qualified Data.Map as Map
-import Dice (Dice(ZeroDie), d)
+import Rdice (Dice(ZeroDie), d)
 import GeneralParse
 import Types as T
 

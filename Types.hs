@@ -1,6 +1,6 @@
 module Types where
 
-import Dice
+import Rdice
 import qualified Data.Map as Map
 import Data.List(group)
 
