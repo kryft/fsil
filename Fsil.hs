@@ -1,10 +1,9 @@
-{-# LANGUAGE BangPatterns #-}
 module Main (fight,
              FightStats,
              damGiven,
-             --critsGiven,
+             critsGiven,
              damGivenPercent,
-             --damTaken,
+             damTaken,
              player,
              opponent,
              readCharDump,
@@ -35,9 +34,9 @@ import qualified Numeric.Probability.Simulation as S
 
 
 data FightStats = FightStats { damGiven :: Dist, 
- --                              critsGiven :: [Dist],
+                               critsGiven :: [Dist],
                                damGivenPercent :: Dist, 
---                               damTaken :: [Dist], 
+                               damTaken :: [Dist], 
                                player :: P.Player, 
                                opponent :: M.Monster
                              }
@@ -106,7 +105,7 @@ attackSeqNCritsDist (a:as) evasion =
 damDistPercent :: RInt -> M.Monster -> RInt
 damDistPercent damDist m =
   do
-    maxHP <- dist (M.health m)
+    maxHP <- dist $ (M.health m)
     damage <- damDist
     return $ 100 - (100 * (maxHP - damage)) `quot` maxHP
 
@@ -124,21 +123,21 @@ fight player monster =
       mProt = M.protDice m
       damGiven' = attackSeqDamDist pAttacks mEv [mProt]
       damGivenPercent' = damDistPercent damGiven' monster
---      critsGiven' = attackSeqNCritsDist pAttacks mEv
+      critsGiven' = attackSeqNCritsDist pAttacks mEv
       --When a monster has several attacks, they're mutually exclusive
       --alternatives, so compute separate distributions for each
- --     damTaken' = map distForOneAttack mAttacks
+      damTaken' = map distForOneAttack mAttacks
       distForOneAttack a = attackDamDist a pEv pProt
   in 
     do
-      damGiven <- simulate nSamples $ damGiven'
-      damGivenPercent <- simulate nSamples $ damGivenPercent'
-  --    critsGiven <- [simulate nSamples d | d <- critsGiven']
-   --   damTaken <- [simulate nSamples d | d <- damTaken']
+      damGiven <- simulate nSamples $! damGiven'
+      damGivenPercent <- simulate nSamples $! damGivenPercent'
+      critsGiven <- mapM (simulate nSamples) $! critsGiven'
+      damTaken <- mapM (simulate nSamples) $! damTaken'
       return $ FightStats { damGiven = damGiven, 
                    damGivenPercent = damGivenPercent,
-                   --critsGiven = critsGiven,
-                -- damTaken = damTaken, 
+                   critsGiven = critsGiven,
+                 damTaken = damTaken, 
                  player = p, 
                  opponent = m}
 
@@ -153,16 +152,16 @@ summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs)
    ++ show (M.alertness $ opponent fs)
    ++ "\nPlayer sees monster: " ++ show ( M.seenByPlayer $ opponent fs )
    ++ "\nDamage dealt by monster: mean " 
---   ++ show ( map mean (damTaken fs))
+   ++ show ( map mean (damTaken fs))
    ++ ", standard deviation " 
---   ++ show (  map std (damTaken fs))
+   ++ show (  map std (damTaken fs))
    ++ "\nProbability of dealing at least x damage: \n" 
---   ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
+   ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
    ++ "\n\nDamage dealt by player: mean " 
    ++ show (mean (damGiven fs))
    ++ ", standard deviation " ++ show (std (damGiven fs))
    ++ "\nProbability of getting at least n critical hits: \n" 
---   ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
+   ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
    ++ "\nProbability of dealing at least X% (of max hp) damage: \n" 
    ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
    ++ "\nProbability of dealing at least x damage: \n" 
