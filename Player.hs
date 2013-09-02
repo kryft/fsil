@@ -84,7 +84,7 @@ applySongStay p =
 
 applySongSharp :: Player -> Player
 applySongSharp p =
-  let sharpnessBonus = min 6 $ getSongValue SongSharp p
+  let sharpnessBonus = max 6 $ getSongValue SongSharp p
       extraSharpness = 6.0 / (fromIntegral sharpnessBonus)
       newAttacks = map multiplySharpness (attacks p) :: [Attack]
       multiplySharpness a = 

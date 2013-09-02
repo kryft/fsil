@@ -145,7 +145,6 @@ summarize :: FightStats -> String
 summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs) 
    ++ "\nPlayer dark resistance: " 
    ++ show ( (P.resistances $ player fs) Map.! T.Dark)
-   ++ "\n" ++ show (P.attacks $ player fs)
    ++ "\nPlayer singing: "
    ++ show (P.activeSongs $ player fs)
    ++ "\nMonster alertness: "
