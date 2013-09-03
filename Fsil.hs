@@ -174,10 +174,13 @@ main = do
       nSamples = CLA.nSamples fsilOptions
       player' = (P.modifyAccuracyWith (+ meleeBonus))
         . (P.modifyEvasionWith (+ evBonus))
-        . (P.singing singing') $ player
+        . (P.singing singing') $ 
+          player {P.onLitSquare = CLA.playerOnLitSquare fsilOptions}
       monsterName = CLA.monsterName fsilOptions
       alertness = CLA.alertness fsilOptions
   monsters <- parseMonsterFile "monster.txt"
-  let monster = (M.getMonster monsterName monsters) {M.alertness = alertness}
+  let monster = (M.getMonster monsterName monsters) {M.alertness = alertness, 
+     M.onLitSquare = CLA.monsterOnLitSquare fsilOptions,
+     M.seenByPlayer = not $ CLA.invisibleMonster fsilOptions}
   fightStats <- fight player' monster nSamples
   putStr . summarize $ fightStats

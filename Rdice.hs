@@ -20,7 +20,7 @@ d number sides
   distlist = replicate number $! R.pick $! (D.uniform [1..sides] :: Dist)
 
 instance Show Dice where
-  show d = show (nDice d) ++ "d" ++ show (nSides d)
+  show d = "fromTuple (" ++ show (nDice d) ++ "," ++ show (nSides d) ++ ")"
 
 sumDists :: [RInt] -> RInt
 sumDists dists = foldr (liftM2 (+)) (return 0) dists

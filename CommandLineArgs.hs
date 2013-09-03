@@ -6,6 +6,9 @@ module CommandLineArgs (FsilOptions,
                         meleeBonus,
                         singing,
                         alertness,
+                        playerOnLitSquare,
+                        monsterOnLitSquare,
+                        invisibleMonster,
                         parseArgs) where
 
 import System.Environment
@@ -27,7 +30,10 @@ data FsilOptions =
                 alertness :: M.Alertness,
                 meleeBonus :: Int,
                 evBonus :: Int,
-                nSamples :: Int}
+                nSamples :: Int,
+                playerOnLitSquare :: Bool,
+                monsterOnLitSquare :: Bool,
+                invisibleMonster :: Bool}
 
 defaultOptions = 
   FsilOptions { charDumpFile = "",
@@ -36,7 +42,10 @@ defaultOptions =
                 alertness = M.Alert,
                 nSamples = 10000,
                 meleeBonus = 0,
-                evBonus = 0}
+                evBonus = 0,
+                playerOnLitSquare = False,
+                monsterOnLitSquare = False,
+                invisibleMonster = False}
 
 
 options :: [OptDescr (FsilOptions -> IO FsilOptions )]
@@ -71,6 +80,18 @@ options =
         >>= \n -> return opt {nSamples = n}) 
       "N_SAMPLES") 
     "Number of samples to use in estimating distributions"
+  , Option [] ["plit"] 
+    (NoArg 
+      (\opt -> return opt {playerOnLitSquare = True})) 
+    "Player is standing on a lit square"
+  , Option [] ["mlit"] 
+    (NoArg 
+      (\opt -> return opt {monsterOnLitSquare = True})) 
+    "Monster is standing on a lit square"
+  , Option [] ["minvisible"] 
+    (NoArg 
+      (\opt -> return opt {invisibleMonster = True})) 
+    "Force monster to be invisible"
  ]
 
 header :: String
