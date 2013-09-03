@@ -1,6 +1,0 @@
--Char dump parser
--Parse monster crit immunity
--Parse player crit resistance
--Maybe parse weapon brands and monster/player weaknesses and automatically
-account for them
--Maybe create an Attack type, (accuracy, damDice, critThres/weaponWeight)

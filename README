@@ -1,0 +1,133 @@
+INTRODUCTION
+
+Fsil is a simple fight simulator for the roguelike Sil (see 
+http://www.amirrorclear.net/flowers/game/sil/index.html). Apart from
+wanting to get a bit of practical Haskell experience (this is my first actual
+program) and play with the probability monad, I wrote Fsil to help answer 
+questions like the following:
+
+-Should my character use this weapon or that? Two-handed or shield?
+-Should I take subtlety? 
+-How risky is it for me to fight this monster in one-on-one combat?
+-What are my odds of oneshotting this sleeping monster?
+
+Fsil takes a Sil 1.1.1 character dump file and the name of a monster, and 
+computes approximate probability distributions for a few quantities:
+
+-The amount of damage that the player deals to the monster in a single round
+(both in terms of absolute damage and as a percentage of the monster's 
+maximum hitpoints)
+-The number of extra damage dice that the player gets from critical hits
+-The amount of damage that the monster deals to the player in a single blow
+
+Fsil prints cumulative distribution functions (e.g., the chance of the 
+player dealing or suffering at least X damage) and some other information,
+such as the player's effective Dark resistance and whether the player is
+able to see the monster or not (based on the player's and the monster's
+light radius).
+
+Fsil doesn't try to model every mechanic in Sil combat. I've generally left out
+mechanics whose effect on the damage of a single attack is hard to determine 
+without a larger context, such as many player abilities. I've also left out
+mechanics whose effect is relatively obvious without any simulation, such as 
+status effects like fear or confusion, or even attack speed (just look at how
+much damage that fast monster does with one attack and keep in mind that it 
+could get two of those.) 
+
+If you assume that neither the player nor the monster is under a status 
+effect, that the player isn't under the effect of a situational ability 
+(such as Concentration or Dodging) and that they are standing next to each 
+other without any other monsters nearby, Fsil output should be accurate.
+(Some situational abilities can easily be simulated by giving the player a 
+melee or ev bonus with the --meleebonus or --evbonus switches.) 
+
+Fsil does model brands, resistances, light effects, multiple attacks from Rapid 
+Attack or Two Weapon Fighting, some songs (Trees, Staying, Sharpness) and some 
+player abilities (Finesse, Power, Subtlety, Hardiness, Assassination, Critical 
+Resistance, Inner Light and Woven Themes).
+
+In the future I might add support for a more full-blown simulation of several 
+rounds of combat; if I do, I will probably add many of the mechanics that I've 
+left out for the moment.
+
+
+INSTALLATION
+
+You need the Haskell platform, available from http://www.haskell.org/platform/
+for Linux, OS X and Windows. (On Linux you can probably install it directly 
+from your distribution's repositories.)
+
+You also need to install the probabilistic programming library from hackage; 
+to do this, just enter the following commands at the command line:
+
+> cabal update
+> cabal install probability
+
+Finally, to compile Fsil, type
+
+> ghc -O2 --make Fsil.hs
+
+in the Fsil source directory.
+
+
+USING FSIL
+
+Fsil assumes that there's a valid monster.txt file (the file in 
+Sil/lib/edit/ that contains all the monster data in plain text) in the
+directory from which you invoke it. The Fsil source directory includes
+the monster.txt file from Sil 1.1.1. 
+
+Basic usage is 
+
+> ./Fsil chardumpfile.txt 'name of monster'
+
+e.g.
+
+> ./Fsil kryft.txt 'Easterling warrior'
+
+The monster name can also be a case-sensitive POSIX regular expression, so
+
+> ./Fsil kryft.txt 'Easterling w'
+
+or even just
+
+> ./Fsil kryft.txt 'E.*w'
+
+would also work. If no match is found for the monster name (regex) that you 
+specified, Fsil will just pit your character against an Orc scout (the first 
+monster in monster.txt).
+
+There are also a few command line switches that you can use:
+
+-s SONG[,SONG]  --singing=SONG[,SONG] where SONG = trees | staying | sharpness
+Use this to have the player character sing; the effect of the song(s) will be 
+calculated using the character's song score listed in the character dump.
+
+If you give two songs separated by a comma, e.g. --singing sharpness,trees
+then the second song will use a song score of (Song - 5), as per Woven 
+Themes.
+
+-a ALERTNESS    --alertness=ALERTNESS where ALERTNESS = unwary | sleeping
+By default monsters are alert; use this to have the monster be unwary or 
+asleep.
+
+--plit                    Player is standing on a lit square
+--mlit                    Monster is standing on a lit square
+
+By default Fsil assumes that the player and monster are both standing on
+unlit dungeon squares.
+
+--minvisible              Force monster to be invisible
+
+By default Fsil assumes that the player can see the monster (unless it's
+too dark); it doesn't do perception checks for Sulrauko. Use this to force
+the monster to be invisible (to simulate a failed perception check).
+
+--evbonus=EV_BONUS        
+--meleebonus=MELEE_BONUS  
+
+Add a (positive or negative) evasion or melee accuracy bonus for the player.
+
+-n N_SAMPLES    --nsamples=N_SAMPLES      
+Use this to set the number of samples that are used to simulate probability
+distributions; the default is 10000.
