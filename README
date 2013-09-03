@@ -24,7 +24,8 @@ Fsil prints cumulative distribution functions (e.g., the chance of the
 player dealing or suffering at least X damage) and some other information,
 such as the player's effective Dark resistance and whether the player is
 able to see the monster or not (based on the player's and the monster's
-light radius).
+light radius). If a monster has several attacks, data for the attacks is
+listed separately.
 
 Fsil doesn't try to model every mechanic in Sil combat. I've generally left out
 mechanics whose effect on the damage of a single attack is hard to determine 
@@ -37,14 +38,13 @@ could get two of those.)
 If you assume that neither the player nor the monster is under a status 
 effect, that the player isn't under the effect of a situational ability 
 (such as Concentration or Dodging) and that they are standing next to each 
-other without any other monsters nearby, Fsil output should be accurate.
-(Some situational abilities can easily be simulated by giving the player a 
-melee or ev bonus with the --meleebonus or --evbonus switches.) 
+other without any other monsters nearby, Fsil output should be accurate, 
+barring bugs.
 
-Fsil does model brands, resistances, light effects, multiple attacks from Rapid 
-Attack or Two Weapon Fighting, some songs (Trees, Staying, Sharpness) and some 
-player abilities (Finesse, Power, Subtlety, Hardiness, Assassination, Critical 
-Resistance, Inner Light and Woven Themes).
+Fsil does model brands, weapon sharpness resistances, light effects, multiple 
+attacks from Rapid Attack or Two Weapon Fighting, some songs (Trees, Staying, 
+Sharpness) and some player abilities (Finesse, Power, Subtlety, Hardiness, 
+Assassination, Critical Resistance, Inner Light and Woven Themes).
 
 In the future I might add support for a more full-blown simulation of several 
 rounds of combat; if I do, I will probably add many of the mechanics that I've 
@@ -79,7 +79,7 @@ the monster.txt file from Sil 1.1.1.
 
 Basic usage is 
 
-> ./Fsil chardumpfile.txt 'name of monster'
+> ./Fsil chardumpfile.txt 'name of monster (case-sensitive)'
 
 e.g.
 
@@ -131,3 +131,11 @@ Add a (positive or negative) evasion or melee accuracy bonus for the player.
 -n N_SAMPLES    --nsamples=N_SAMPLES      
 Use this to set the number of samples that are used to simulate probability
 distributions; the default is 10000.
+
+
+For example,
+
+> ./Fsil --singing sharpness -a sleeping kryft.txt 'Sapphire serpent' 
+
+outputs the data for attacking a sleeping Sapphire serpent while singing
+Song of Sharpness. 
