@@ -77,7 +77,7 @@ applyCritRes = do
 applyAssassination :: CombatState ()
 applyAssassination = do
   (p,m) <- get
-  when ((M.seenByPlayer m) && M.Sleeping == M.alertness m
+  when ((M.seenByPlayer m) && M.Alert /= M.alertness m
           && p `P.hasAbility` T.Assassination) $
     modifyPlayer $ P.modifyAccuracyWith (+ (P.stealth p))
 
