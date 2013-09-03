@@ -110,10 +110,8 @@ damDistPercent damDist m =
     return $ 100 - (100 * (maxHP - damage)) `quot` maxHP
 
 
-nSamples = 10000 :: Int
-
-fight :: P.Player -> M.Monster -> IO FightStats
-fight player monster =
+fight :: P.Player -> M.Monster -> Int -> IO FightStats
+fight player monster nSamples =
   let (_,(p,m)) = runState CS.applyCombatModifiers (player,monster)
       pAttacks = P.attacks p
       pEv = P.evasion p
@@ -173,6 +171,7 @@ main = do
   let singing' = CLA.singing fsilOptions
       meleeBonus = CLA.meleeBonus fsilOptions
       evBonus = CLA.evBonus fsilOptions
+      nSamples = CLA.nSamples fsilOptions
       player' = (P.modifyAccuracyWith (+ meleeBonus))
         . (P.modifyEvasionWith (+ evBonus))
         . (P.singing singing') $ player
@@ -180,5 +179,5 @@ main = do
       alertness = CLA.alertness fsilOptions
   monsters <- parseMonsterFile "monster.txt"
   let monster = (M.getMonster monsterName monsters) {M.alertness = alertness}
-  fightStats <- fight player' monster
+  fightStats <- fight player' monster nSamples
   putStr . summarize $ fightStats

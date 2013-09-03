@@ -2,6 +2,7 @@ module CommandLineArgs (FsilOptions,
                         charDumpFile,
                         monsterName,
                         evBonus,
+                        nSamples,
                         meleeBonus,
                         singing,
                         alertness,
@@ -25,13 +26,15 @@ data FsilOptions =
                 singing :: T.Singing,
                 alertness :: M.Alertness,
                 meleeBonus :: Int,
-                evBonus :: Int}
+                evBonus :: Int,
+                nSamples :: Int}
 
 defaultOptions = 
   FsilOptions { charDumpFile = "",
                 monsterName = "",
                 singing = T.Quiet,
                 alertness = M.Alert,
+                nSamples = 10000,
                 meleeBonus = 0,
                 evBonus = 0}
 
@@ -53,15 +56,21 @@ options =
   , Option [] ["evbonus"] 
     (ReqArg 
       (\arg opt -> parseStr arg G.parseInt
-        >>= \s -> return opt {evBonus = s}) 
+        >>= \n -> return opt {evBonus = n}) 
       "EV_BONUS") 
     "Evasion bonus for the player (integer)"
    , Option [] ["meleebonus"] 
     (ReqArg 
       (\arg opt -> parseStr arg G.parseInt 
-        >>= \s -> return opt {meleeBonus = s}) 
+        >>= \n -> return opt {meleeBonus = n}) 
       "MELEE_BONUS") 
-    "Melee bonus for the player (integer)"
+    "Melee accuracy bonus for the player (integer)"
+  , Option ['n'] ["nsamples"] 
+    (ReqArg 
+      (\arg opt -> parseStr arg G.parseInt 
+        >>= \n -> return opt {nSamples = n}) 
+      "N_SAMPLES") 
+    "Number of samples to use in estimating distributions"
  ]
 
 header :: String
