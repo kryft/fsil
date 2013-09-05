@@ -140,7 +140,15 @@ fight player monster nSamples =
                  opponent = m}
 
 summarize :: FightStats -> String
-summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs) 
+summarize fs = "SUMMARY AND MISC INFORMATION\n\n" 
+   ++ P.name (player fs) ++ " vs " ++ M.name (opponent fs) 
+   ++ "\nDamage dealt by monster: mean " 
+   ++ show ( map mean (damTaken fs))
+   ++ ", standard deviation " 
+   ++ show (  map std (damTaken fs))
+   ++ "\nDamage dealt by player: mean " 
+   ++ show (mean (damGiven fs))
+   ++ ", standard deviation " ++ show (std (damGiven fs))
    ++ "\nPlayer dark resistance: " 
    ++ show ( (P.resistances $ player fs) Map.! T.Dark)
    ++ "\nPlayer singing: "
@@ -148,18 +156,13 @@ summarize fs = P.name (player fs) ++ " vs " ++ M.name (opponent fs)
    ++ "\nMonster alertness: "
    ++ show (M.alertness $ opponent fs)
    ++ "\nPlayer sees monster: " ++ show ( M.seenByPlayer $ opponent fs )
-   ++ "\nDamage dealt by monster: mean " 
-   ++ show ( map mean (damTaken fs))
-   ++ ", standard deviation " 
-   ++ show (  map std (damTaken fs))
-   ++ "\nProbability of dealing at least x damage: \n" 
+   ++ "\n\n\nMONSTER ATTACKING PLAYER\n"
+   ++ "\nProbability of dealing at least x damage: \n\n" 
    ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
-   ++ "\n\nDamage dealt by player: mean " 
-   ++ show (mean (damGiven fs))
-   ++ ", standard deviation " ++ show (std (damGiven fs))
-   ++ "\nProbability of getting at least n critical hits: \n" 
+   ++ "\n\nPLAYER ATTACKING MONSTER\n"
+   ++ "\nProbability of getting at least n critical hits:\n" 
    ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
-   ++ "\nProbability of dealing at least X% (of max hp) damage: \n" 
+   ++ "\nProbability of dealing at least X% (of max hp) damage:\n" 
    ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
    ++ "\nProbability of dealing at least x damage: \n" 
    ++ (printCDF 3 $ ccdf 1 (damGiven fs) )
