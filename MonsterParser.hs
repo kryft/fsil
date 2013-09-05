@@ -36,6 +36,9 @@ monsterEntry = try $
     name <- nameField
     skipTillField "I" 
     (speed,health,lightRadius) <- infoField 
+    --Field A: always comes after I:
+    spaces
+    will <- alertnessField
     skipTillField "P"
     (evasion,protDice) <- protectionField
     --If the attack field B: exists (as it does for every monster
@@ -52,6 +55,7 @@ monsterEntry = try $
     anyChar `manyTill` try endOfMonsterEntry
     return $ M.Monster { M.name = name,
                        M.speed = speed,
+                       M.will = will,
                        M.evasion = evasion,
                        M.protDice = protDice,
                        M.attacks = attacks,
@@ -116,6 +120,15 @@ infoField =
     ignoreSubField
     lightRadius <- subField parseInt
     return (speed,health,lightRadius)
+
+alertnessField :: Parser Int
+alertnessField =
+  do
+    string "A:"
+    count 3 ignoreSubField
+    parseInt --Will score
+
+
 
 --The P: field is for evasion and protection dice
 protectionField :: Parser (Int,Dice)

@@ -35,6 +35,7 @@ import qualified Numeric.Probability.Simulation as S
 
 data FightStats = FightStats { damGiven :: Dist, 
                                critsGiven :: [Dist],
+                               confusionTurnsInflicted :: Dist,
                                damGivenPercent :: Dist, 
                                damTaken :: [Dist], 
                                player :: P.Player, 
@@ -45,9 +46,9 @@ data FightStats = FightStats { damGiven :: Dist,
 toHitDist :: Int -> Int -> RInt
 toHitDist accuracy evasion = 
   do 
-    toHitRoll <- dist $ 1 `d` 20
-    evasionRoll <- dist $ 1 `d` 20
-    return $ (toHitRoll + accuracy) - (evasionRoll + evasion)
+    toHitRoll <- (+accuracy) `fmap` (dist $ 1 `d` 20)
+    evasionRoll <- (+evasion) `fmap` (dist $ 1 `d` 20)
+    return $ toHitRoll - evasionRoll
 
 
 nCrits :: Double -> Int -> Int
@@ -102,6 +103,29 @@ attackSeqNCritsDist [] _ = []
 attackSeqNCritsDist (a:as) evasion =
   (attackNCritsDist a evasion) : attackSeqNCritsDist as evasion
 
+--Number of turns of confusion inflicted with cruel blow.
+--If multiple player attacks inflict confusion, the maximum of
+--the confusion turn counts inflicted by the individual attacks
+--will be used.
+cruelBlowTurns :: [RInt] -> M.Monster -> RInt
+cruelBlowTurns nCritsDists monster = 
+  fmap maximum $ sequence $ map (cBTurnsForOneAttack monster) nCritsDists
+  where
+  cBTurnsForOneAttack monster nCritsDist = do
+    nCrits <- nCritsDist
+    check <- skillCheck (4 * nCrits) (M.will monster)
+    if check > 0
+      then return nCrits
+      else return 0
+
+
+
+skillCheck :: Int -> Int -> RInt
+skillCheck skill difficulty = do
+  skillRoll <- (+ skill) `fmap` (dist $ 1 `d` 10)
+  diffRoll <- (+ difficulty) `fmap` (dist $ 1 `d` 10)
+  return $ skillRoll - diffRoll
+
 damDistPercent :: RInt -> M.Monster -> RInt
 damDistPercent damDist m =
   do
@@ -122,6 +146,7 @@ fight player monster nSamples =
       damGiven' = attackSeqDamDist pAttacks mEv [mProt]
       damGivenPercent' = damDistPercent damGiven' monster
       critsGiven' = attackSeqNCritsDist pAttacks mEv
+      confusionTurnsInflicted' = cruelBlowTurns critsGiven' monster
       --When a monster has several attacks, they're mutually exclusive
       --alternatives, so compute separate distributions for each
       damTaken' = map distForOneAttack mAttacks
@@ -131,10 +156,12 @@ fight player monster nSamples =
       damGiven <- simulate nSamples $! damGiven'
       damGivenPercent <- simulate nSamples $! damGivenPercent'
       critsGiven <- mapM (simulate nSamples) $! critsGiven'
+      confusionTurnsInflicted <- simulate nSamples $! confusionTurnsInflicted'
       damTaken <- mapM (simulate nSamples) $! damTaken'
       return $ FightStats { damGiven = damGiven, 
-                   damGivenPercent = damGivenPercent,
-                   critsGiven = critsGiven,
+                 damGivenPercent = damGivenPercent,
+                 critsGiven = critsGiven,
+                 confusionTurnsInflicted = confusionTurnsInflicted,
                  damTaken = damTaken, 
                  player = p, 
                  opponent = m}
@@ -155,6 +182,8 @@ summarize fs = "SUMMARY AND MISC INFORMATION\n\n"
    ++ show (P.activeSongs $ player fs)
    ++ "\nMonster alertness: "
    ++ show (M.alertness $ opponent fs)
+   ++ "\nMonster will: "
+   ++ show (M.will $ opponent fs)
    ++ "\nPlayer sees monster: " ++ show ( M.seenByPlayer $ opponent fs )
    ++ "\n\n\nMONSTER ATTACKING PLAYER\n"
    ++ "\nProbability of dealing at least x damage: \n\n" 
@@ -162,6 +191,9 @@ summarize fs = "SUMMARY AND MISC INFORMATION\n\n"
    ++ "\n\nPLAYER ATTACKING MONSTER\n"
    ++ "\nProbability of getting at least n critical hits:\n" 
    ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )
+   ++ "\nProbability of inflicting at least n turns of confusion \
+    \with Cruel Blow:\n" 
+   ++ (printCDF 3 $ ccdf 1 (confusionTurnsInflicted fs))
    ++ "\nProbability of dealing at least X% (of max hp) damage:\n" 
    ++ (printCDF 3 $ takeWhile ((<= 100) . fst)  $ ccdf 10 $ damGivenPercent fs ) 
    ++ "\nProbability of dealing at least x damage: \n" 
