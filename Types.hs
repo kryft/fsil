@@ -10,6 +10,7 @@ import Data.List(group)
 --modifyEvasionWith and modifyAccuracyWith
 data Ability = Finesse | Subtlety | Power | CritRes | Hardiness 
   | TwoWeaponFighting | RapidAttack | InnerLight | Assassination
+  | HeavyArmourUse
   deriving (Show, Eq)
 
 data Song = SongSharp | SongTrees | SongStay

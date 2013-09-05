@@ -7,7 +7,7 @@ import qualified Player as P
 import Data.List (concat, group)
 import Data.Maybe (catMaybes, fromJust, isJust)
 import qualified Data.Map as Map
-import Rdice (Dice(ZeroDie), d)
+import Rdice (Dice(ZeroDie), d, nSides, nDice)
 import GeneralParse
 import Types as T
 
@@ -30,6 +30,7 @@ charDumpFile =
     --Use lookAhead here to ensure that we don't skip any of the
     --stats (Evasion etc) that we want to parse after this
     attackTuples <- lookAhead $ parseAttackTuples 
+    listedProtRange <- lookAhead $ skipTill "Armor" >> parseProtRange
     evasion <- getStat "Evasion" 
     stealth <- getStat "Stealth"
     will <- getStat "Will"
@@ -41,6 +42,9 @@ charDumpFile =
     abilities <- parseAbilities
     let protDice = 
           (filter (/= ZeroDie)) . catMaybes $ map eqProtDice equipment
+        eqProtMax = sum $ map (\x -> nDice x * nSides x) protDice
+        heavyArmourUseProtBonus = 
+          inferHeavyArmourUseBonus listedProtRange eqProtMax abilities will 
         eqAbilities' = concat $ map eqAbilities equipment
         allAbilities = abilities ++ eqAbilities'
         attacks = makeAttacks attackTuples allAbilities equipment
@@ -55,10 +59,25 @@ charDumpFile =
         P.song = song,
         P.activeSongs = Quiet,
         P.equipment = equipment,
-        P.protDice = protDice,
+        P.protDice = protDice ++ heavyArmourUseProtBonus,
         P.abilities = abilities,
         P.onLitSquare = False
       }
+
+--A necessary hack: armor weight isn't listed in char dumps, so
+--in order to 
+inferHeavyArmourUseBonus :: 
+  (Int,Int) -> Int -> [T.Ability] -> Int -> [Dice]
+inferHeavyArmourUseBonus listedProtRange eqProtMax abilities will =
+  if not (T.HeavyArmourUse `elem` abilities)
+  then []
+  else
+    let hardinessBonus = if (T.Hardiness `elem` abilities)
+                           then will `quot` 6
+                           else 0
+        listedProtMax = snd listedProtRange
+        heavyArmourUseSides = listedProtMax - hardinessBonus - eqProtMax
+    in [1 `d` heavyArmourUseSides]
 
 skipTill str = anyChar `manyTill` (try $ string str)
 
@@ -89,6 +108,16 @@ parseAttackTuples = try $ do
   (try parseAttackTuple) `endBy1` junk
   where 
     junk = anyChar `manyTill` lookAhead (string "(" <|> string "Bows")
+
+parseProtRange :: Parser (Int,Int)
+parseProtRange = try $ do
+  skipTill ","
+  minProt <- parseInt
+  char '-'
+  maxProt <- parseInt
+  return $ (minProt,maxProt)
+
+
 
 parseEquipment :: Parser [Equipment]
 parseEquipment = do
@@ -288,7 +317,8 @@ parseAbility = do
              try (mlString "Two Weapon Fighting") <|>
              try (mlString "Rapid Attack") <|>
              try (mlString "Inner Light") <|>
-             try (mlString "Critical Resistance") 
+             try (mlString "Critical Resistance") <|>
+             try (mlString "Heavy Armour Use") 
   return $ stringToAbility ability
   where
     stringToAbility :: String -> Ability
@@ -303,6 +333,7 @@ parseAbility = do
         "Rapid Attack" -> RapidAttack
         "Inner Light" -> InnerLight
         "Assassination" -> Assassination
+        "Heavy Armour Use" -> HeavyArmourUse
 
 --Parse abilities from the [Notes] section of a Sil char dump
 parseAbilities = many $ (try $ ignoreUntil validAbility eof)
