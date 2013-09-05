@@ -44,7 +44,8 @@ barring bugs.
 Fsil does model brands, weapon sharpness resistances, light effects, multiple 
 attacks from Rapid Attack or Two Weapon Fighting, some songs (Trees, Staying, 
 Sharpness) and some player abilities (Finesse, Power, Subtlety, Hardiness, 
-Assassination, Critical Resistance, Inner Light and Woven Themes).
+Heavy Armour Use, Assassination, Critical Resistance, Inner Light and Woven 
+Themes).
 
 In the future I might add support for a more full-blown simulation of several 
 rounds of combat; if I do, I will probably add many of the mechanics that I've 

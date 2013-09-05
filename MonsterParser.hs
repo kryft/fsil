@@ -34,6 +34,8 @@ monsterEntry :: Parser M.Monster
 monsterEntry = try $
   do
     name <- nameField
+    spaces
+    depth <- depthField
     skipTillField "I" 
     (speed,health,lightRadius) <- infoField 
     --Field A: always comes after I:
@@ -54,6 +56,7 @@ monsterEntry = try $
     (critRes,resistances,hatesLight,slainBy,glows) <- flagsField
     anyChar `manyTill` try endOfMonsterEntry
     return $ M.Monster { M.name = name,
+                       M.depth = depth,
                        M.speed = speed,
                        M.will = will,
                        M.evasion = evasion,
@@ -104,15 +107,20 @@ ignoreSubField = subField anySubField
 
 
 nameField :: Parser String
-nameField = 
+nameField = try $
   do
     string "N:"
     ignoreSubField -- serial number; ignored for now
     subField $ many1 (letter <|> oneOf " ,-'") --name of monster
 
+depthField :: Parser Int
+depthField = try $
+  do
+    string "W:"
+    parseInt --monster depth
 
 infoField :: Parser (Int, Dice, Int)
-infoField = 
+infoField = try $
   do
     string "I:" 
     speed <- subField parseInt
@@ -122,7 +130,7 @@ infoField =
     return (speed,health,lightRadius)
 
 alertnessField :: Parser Int
-alertnessField =
+alertnessField = try $
   do
     string "A:"
     count 3 ignoreSubField

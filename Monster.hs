@@ -24,6 +24,7 @@ unwary :: Monster -> Monster
 unwary m = m {alertness = Unwary}
 
 data Monster = Monster { name :: String, 
+                         depth :: Int,
                          attacks :: [Attack], 
                          evasion :: Int,
                          lightRadius :: Int,
