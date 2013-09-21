@@ -137,10 +137,13 @@ equippedItem = do
   name <- do
     spaces  
     (try $ string "(nothing)") <|>
-      (anyChar `manyTill` (lookAhead (oneOf "([<") <|> (eol >> return ' ')))
+      (anyChar `manyTill` (lookAhead $ (oneOf "([<") <|> (eol >> return ' ')))
 
+  optional $ try $ between (char '(') (char ')') 
+    (string "Defender" <|> string "Vampiric" <|> string "Poisoned")
+  many spaceBar
   --Skip possible attack tuple
-  optional $ between (char '(') (char ')') (many $ noneOf ")")
+  optional $ try $ parseAttackTuple
   many spaceBar
   --Just about any equipped item may grant protection
   maybeProtDice <- option Nothing (fmap (Just . snd) parseDefenseTuple) 
