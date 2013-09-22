@@ -62,7 +62,8 @@ makeResistanceMap resList vulnList =
       insertResTupleWith func (elem', level) = Map.insertWith func elem' level
       insertResTuplesWith f tuples resMap 
         = foldr (insertResTupleWith f) resMap tuples
-  in insertResTuplesWith (-) vulnTuples $ insertResTuplesWith (+) resTuples $ baseRes
+      subtract = \x y -> y - x
+  in insertResTuplesWith subtract vulnTuples $ insertResTuplesWith (+) resTuples $ baseRes
  
 
 
