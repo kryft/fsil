@@ -197,7 +197,7 @@ flagsField = do
       glows = "GLOW" `elem` flags
   return (critRes, resMap, hatesLight, maybeSlainBy, glows)
     where
-    flag = many1 (upper <|> char '_')
+    flag = many1 (upper <|> digit <|> char '_')
     flagSep = try (spaces >> char '|' >> spaces >> return "|") <|> 
       try (many spaceBar >> eol >> string "F:")
 
