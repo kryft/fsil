@@ -187,7 +187,7 @@ summarize fs = "SUMMARY AND MISC INFORMATION\n\n"
    ++ "\nPlayer sees monster: " ++ show ( M.seenByPlayer $ opponent fs )
    ++ "\n\n\nMONSTER ATTACKING PLAYER\n"
    ++ "\nProbability of dealing at least x damage: \n\n" 
-   ++ unlines (map (printCDF 3) $ map (ccdf 1) (damTaken fs))
+   ++ unlines (map (printCDF 0) $ map (ccdf 1) (damTaken fs))
    ++ "\n\nPLAYER ATTACKING MONSTER\n"
    ++ "\nProbability of getting at least n critical hits:\n" 
    ++ unlines ( map (printCDF 3) $ map (ccdf 1) (critsGiven fs) )

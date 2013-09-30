@@ -103,5 +103,9 @@ pprint decimals d = unlines $ map printPair $ (D.sortElem . D.decons . D.norm) d
 printCDF :: Int -> [(Int, Float)] -> String 
 printCDF decimals c = unlines $ map printPair $ filter aboveProbThres c
   where
-  aboveProbThres = (>= 10 ** (- (fromIntegral decimals))) . snd
-  printPair (x,p) = show x ++ " " ++ showFFloat (Just decimals) p ""
+  aboveProbThres = if decimals > 0 
+                    then (>= 10 ** (- (fromIntegral decimals))) . snd
+                    else (> 0) . snd
+  printPair (x,p) = if decimals > 0
+                      then show x ++ " " ++ showFFloat (Just decimals) p ""
+                      else show x ++ " " ++ show p
