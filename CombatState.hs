@@ -42,8 +42,11 @@ playerNetLight p m =
 --Net light strength on the monster's square
 monsterNetLight :: P.Player -> M.Monster -> Int
 monsterNetLight p m =
-  P.playerLight p - 1 + M.dungeonLight m + monsterLight 
-    + monsterGlow
+  --glowing monsters are always visible
+  if M.glows m 
+    then 1 
+    else
+    P.playerLight p - 1 + M.dungeonLight m + monsterLight 
   where monsterGlow = if M.glows m then 1 else 0
         monsterLight 
           | M.lightRadius m < 0 = M.lightRadius m - 1
