@@ -147,8 +147,13 @@ updateDarkResistance = do
 applyLightPenalties :: CombatState ()
 applyLightPenalties = do
   (p,m) <- get
-  --Can the player see the monster?
-  when (monsterNetLight p m < 1 || not (M.seenByPlayer m)) $ do
+  let monsterVisibilityThreshold = if p `P.hasAbility` T.KeenSenses 
+                                    then -1 else 0
+  --Can the player see the monster? If the monster's square is too dark, or
+  --if the monster has been forced to be invisible with the --minvisible 
+  --command line flag, halve player's melee and evasion scores
+  when (monsterNetLight p m < monsterVisibilityThreshold
+    || not (M.seenByPlayer m)) $ do
     modifyPlayer $ P.modifyEvasionWith (divBy 2)
     modifyPlayer $ P.modifyAccuracyWith (divBy 2)
     modifyMonster $ \m -> m {M.seenByPlayer = False}

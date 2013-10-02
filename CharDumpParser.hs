@@ -321,6 +321,7 @@ parseAbility = do
              try (mlString "Rapid Attack") <|>
              try (mlString "Inner Light") <|>
              try (mlString "Critical Resistance") <|>
+             try (mlString "Keen Senses") <|>
              try (mlString "Heavy Armour Use") 
   return $ stringToAbility ability
   where
@@ -337,6 +338,7 @@ parseAbility = do
         "Inner Light" -> InnerLight
         "Assassination" -> Assassination
         "Heavy Armour Use" -> HeavyArmourUse
+        "Keen Senses" -> KeenSenses
 
 --Parse abilities from the [Notes] section of a Sil char dump
 parseAbilities = many $ (try $ ignoreUntil validAbility eof)
