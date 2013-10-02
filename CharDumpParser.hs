@@ -1,3 +1,4 @@
+-- | A module for scraping Sil 1.1.1 character dump files.
 module CharDumpParser (readCharDump, charDumpFile) where
 
 import Text.Parsec
@@ -12,6 +13,9 @@ import GeneralParse
 import Types as T
 
 
+-- | Takes the name of a char dump file and tries to construct a Player
+-- from the dump. Will call error if the file doesn't exist or if the 
+-- parser fails (shouldn't happen unless there's a bug).
 readCharDump :: String -> IO P.Player
 readCharDump filename = 
   do
@@ -20,15 +24,18 @@ readCharDump filename =
       Right player -> return player
       Left parseError -> error $ show parseError
 
---Parses (or rather scrapes) a Sil character dump file.
+-- | Parsec Parser for Sil 1.1.1 dump files.
 charDumpFile :: Parser P.Player
 charDumpFile = 
+--The char dump format is not designed to be parsed, and much of the 
+--information is irrelevant for fsil, so there's a lot of skipping
+--ahead to the next relevant bit using skipTill. Occasionally lookAhead
+--is used to make multiple passes over some part of the file to parse
+--several different things.
   do
     skipTill "Name"
     name <- parseName
     skipTill "Melee"
-    --Use lookAhead here to ensure that we don't skip any of the
-    --stats (Evasion etc) that we want to parse after this
     attackTuples <- lookAhead $ parseAttackTuples 
     listedProtRange <- lookAhead $ skipTill "Armor" >> parseProtRange
     evasion <- getStat "Evasion" 
@@ -65,7 +72,12 @@ charDumpFile =
       }
 
 --A necessary hack: armor weight isn't listed in char dumps, so
---in order to 
+--in order to figure out how big the protection bonus from the Heavy Armour
+--Use ability is, we look at the listed max protection roll (e.g. "18" in
+--"Armor [+13,6-18]") and subtract the contributions of all other sources of 
+--protection (whose size can be inferred from the char dump), that is,
+--equipment, Hardiness and Song of Staying.
+--FIXME: actually include Song of Staying :P
 inferHeavyArmourUseBonus :: 
   (Int,Int) -> Int -> [T.Ability] -> Int -> [Dice]
 inferHeavyArmourUseBonus listedProtRange eqProtMax abilities will =
@@ -78,6 +90,7 @@ inferHeavyArmourUseBonus listedProtRange eqProtMax abilities will =
         listedProtMax = snd listedProtRange
         heavyArmourUseSides = listedProtMax - hardinessBonus - eqProtMax
     in [1 `d` heavyArmourUseSides]
+
 
 skipTill str = anyChar `manyTill` (try $ string str)
 
@@ -102,6 +115,7 @@ parseName = try $ do
 
 stripSpacesAtEnd = reverse . (dropWhile isSpace) . reverse
 
+--Parses all the player's melee attacks of the form (+X, YdZ)
 parseAttackTuples :: Parser [(Int,Dice)]
 parseAttackTuples = try $ do
   spaces 
@@ -109,6 +123,7 @@ parseAttackTuples = try $ do
   where 
     junk = anyChar `manyTill` lookAhead (string "(" <|> string "Bows")
 
+--Parses the listed protection range, e.g. (6,18) in "Armor [+13, 6-18]"
 parseProtRange :: Parser (Int,Int)
 parseProtRange = try $ do
   skipTill ","
@@ -118,15 +133,17 @@ parseProtRange = try $ do
   return $ (minProt,maxProt)
 
 
-
+--Parse the "Equipment" section of the char dump file
 parseEquipment :: Parser [Equipment]
 parseEquipment = do
   anyChar `manyTill` lookAhead slotID
   equippedItem `sepEndBy` endItemDesc
 
+--Beginning of an equipment slot description, e.g. "a)"
 slotID :: Parser String
 slotID = try $ oneOf "abcdefghijklmn" >>= \id -> char ')' >> return [id, ')']
 
+--Description of a single equipped item
 equippedItem :: Parser Equipment
 equippedItem = do
   slotStr <- slotID
@@ -181,6 +198,7 @@ equippedItem = do
                        eqSlays = slays }
 
  
+--Parse the weight of an item (only listed and relevant for weapons)
 parseWeight :: Parser Double
 parseWeight = try $ do
   spaces
@@ -263,7 +281,7 @@ parseSharpness = option 1.0 $ itemDescScraper sharpSentence
   where sharpSentence = (mlString "cuts easily through armour" >> (return 0.5)) <|> (mlString "cuts very easily through armour" >> (return 0.0))
 
 
---mlString parses str, but allows it to span multiple lines.
+--mlString parses a string, but allows it to span multiple lines.
 mlString :: String -> Parser String
 mlString str = fmap concat $ (map string $ words str) `seqSepBy` separator
   where 
@@ -345,6 +363,8 @@ parseAbilities = many $ (try $ ignoreUntil validAbility eof)
   where validAbility = between (char '(') (char ')') parseAbility
 
 
+--Construct Attack values for the player based on the attacks listed
+--after "Melee" in the dump.
 makeAttacks :: [(Int,Dice)] -> [Ability] -> [Equipment] -> [Attack]
 makeAttacks attackTuples abilities equipment = 
   let eqSlots = inferSlots attackTuples abilities
@@ -352,6 +372,8 @@ makeAttacks attackTuples abilities equipment =
       getWeapon eq slot = head . filter (\x -> slot == eqSlot x) $ eq
   in map (makeAttack abilities) $ zip weapons attackTuples
 
+--Constructs a single Attack value, taking into account relevant abilities 
+--and modifiers from the weapon
 makeAttack :: [Ability] -> (Equipment, (Int, Dice)) -> Attack
 makeAttack abilities (weapon, (accuracy, damDice)) =
   let weaponWeight = fromJust $ eqWeight weapon 
@@ -383,7 +405,10 @@ resistancesFrom eq = T.makeResistanceMap resList vulnList
  
 
 
-
+--Infers which attack tuple listed after "Melee" in the char dump
+--corresponds to which weapon. For example, if there are two attack
+--tuples, it could either be two attacks with the main weapon or
+--one attack with the main weapon and one attack with the off-hand.
 inferSlots :: [(Int, Dice)] -> [Ability] -> [EqSlot]
 inferSlots attackTuples abilities
 --If there's just one attack, it must be the main hand
