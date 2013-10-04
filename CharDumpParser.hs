@@ -278,7 +278,7 @@ parseItemAbilities = option [] $ itemDescScraper abilitySentence
                 mlString "It grants you the abilities:"
 
 parseSharpness = option 1.0 $ itemDescScraper sharpSentence 
-  where sharpSentence = (mlString "cuts easily through armour" >> (return 0.5)) <|> (mlString "cuts very easily through armour" >> (return 0.0))
+  where sharpSentence = try (mlString "cuts easily through armour" >> (return 0.5)) <|> (mlString "cuts very easily through armour" >> (return 0.0))
 
 
 --mlString parses a string, but allows it to span multiple lines.
