@@ -11,7 +11,7 @@ import qualified Data.Map as Map
 monsterFile :: Parser [M.Monster]
 monsterFile = junk >> monsterEntry `sepEndBy` junk 
 
-junk = anyChar `manyTill` (lookAhead nameFieldStart <|> myEof)
+junk = anyChar `manyTill` (lookAhead nameFieldStart <|> (eof >> return " "))
 
 parseMonsterFile :: String -> IO [M.Monster]
 parseMonsterFile filename = 

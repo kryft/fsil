@@ -1,3 +1,4 @@
+-- | Some simple parsers used by the other fsil parsers.
 module GeneralParse where
 
 import Rdice (Dice(ZeroDie), d)
@@ -9,7 +10,7 @@ import Text.Parsec.String (Parser, parseFromFile)
 spaceBar :: Parser Char
 spaceBar = char ' '
 
---Skips everything until either 'relevantBit' or 'endOfInput' succeeds.
+-- | Skips everything until either 'relevantBit' or 'endOfInput' succeeds.
 --If 'relevantBit' succeeds, returns the result of that; otherwise
 --fails.
 ignoreUntil :: Parser a -> Parser b -> Parser a
@@ -17,6 +18,10 @@ ignoreUntil relevantBit endOfInput = try relevantBit
   <|> (try endOfInput >> parserFail "parser 'stop' succeeded")
   <|> (anyChar >> ignoreUntil relevantBit endOfInput)
 
+-- | Takes a list of parsers and a parser for a separator, and tries to
+-- apply each of the list's parsers in turn, alternating with the separator 
+-- parser. E.g. seqSepBy [string "a", string "b", string "c"] string "," would
+-- correctly parse "a,b,c" but fail on "ab,c" or "a,,b,c".
 seqSepBy :: [Parser a] -> Parser a -> Parser [a]
 seqSepBy (p:[]) _ = do {pRes <- p; return [pRes]}
 seqSepBy (p:ps) separator =
@@ -26,7 +31,7 @@ seqSepBy (p:ps) separator =
     rest <- seqSepBy ps separator
     return $ pRes : sep : rest 
   
-
+-- | Parses an integer with an optional sign.
 parseInt :: Parser Int
 parseInt = 
   do
@@ -35,6 +40,7 @@ parseInt =
     let value = read digits
     return $ if sign == '+' then value else (-value)
 
+-- | Parses a positive double in decimal notation.
 parseDouble :: Parser Double
 parseDouble = try $
   do
@@ -48,7 +54,7 @@ parseDouble = try $
 
     
 
-
+-- | Parses dice in the format XdY, e.g. 12d6
 diceParser :: Parser Dice
 diceParser = 
   do
@@ -57,6 +63,7 @@ diceParser =
     nSides <- parseInt
     return $ nDice `d` nSides
 
+-- | Parses an end of line character; should parse unix, dos or mac eol correctly.
 eol :: Parser String
 eol =   try (string "\n\r")
     <|> try (string "\r\n")
@@ -64,9 +71,7 @@ eol =   try (string "\n\r")
     <|> string "\r"
     <?> "end of line"
 
-myEof :: Parser String
-myEof = do {eof; return " "}
-
+-- | Parses a Sil defense tuple, e.g. [-3], [1d1], [+5,2d5]
 parseDefenseTuple :: Parser (Int, Dice)
 parseDefenseTuple =
   do
@@ -81,6 +86,7 @@ parseDefenseTuple =
     char ']'
     return (ev, protDice)
  
+ -- | Parses a Sil attack tuple, e.g. (+3) or (+5,2d6)
 parseAttackTuple :: Parser (Int, Dice)
 parseAttackTuple = 
  do
