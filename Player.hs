@@ -4,10 +4,14 @@ import Types as T
 import Rdice
 import qualified Data.Map as Map
 
---The base number by which the player's to-hit roll needs to exceed
---a monster's evasion roll for a critical hit to occur.
+-- | The base number by which the player's to-hit roll needs to exceed
+--a monster's evasion roll for a critical hit to occur. This is 7.0 in
+--Sil (and not likely to change).
 playerBaseCritThres = 7.0
 
+-- | The state of a player as far as fsil is concerned, so hit points
+-- etc are not included, since we're currently just simulating damage
+-- distributions for single attacks by a player or monster.
 data Player = Player { name :: String,
                        attacks :: [Attack],
                        evasion :: Int,
@@ -20,7 +24,7 @@ data Player = Player { name :: String,
                        will :: Int,
                        song :: Int,
                        stealth :: Int,
-                       onLitSquare :: Bool
+                       onLitSquare :: Bool -- ^Standing on a lit square?
                      } deriving (Show)
 
 blankPlayer = Player { name = "",
@@ -38,18 +42,23 @@ blankPlayer = Player { name = "",
                        onLitSquare = False }
 
 
+-- | Checks whether the player's off-hand is empty (matters for
+-- the Subtlety ability).
 hasEmptyOffHand :: Player -> Bool
 hasEmptyOffHand p = (T.eqName offHandItem) == "(nothing)"
   where 
     offHandItem = head $ filter isOffHand (equipment p)
     isOffHand x = (T.eqSlot x) == T.OffHand
 
+-- | Sets the player's activeSongs to the parameter.
 singing :: Singing -> Player -> Player
 singing singing' p = p {activeSongs = singing'}
 
+-- | Gives the player additional abilities.
 withAbilities :: [T.Ability] -> Player -> Player
 withAbilities as p = p {abilities = (abilities p) ++ as}
 
+-- | Checks whether the given song is currently being sung.
 isActiveSong :: Song -> Player -> Bool
 isActiveSong song' player =
   case (activeSongs player) of 
@@ -57,10 +66,11 @@ isActiveSong song' player =
     OneSong s -> song' == s
     WovenThemes (s1, s2) -> (s1 == song' || s2 == song') 
 
+-- | Does the player have this ability?
 hasAbility :: Player -> Ability -> Bool
 hasAbility p a = a `elem` (abilities p)
 
---Light strength on player's square (not including effects from
+-- | Light strength on player's square (not including effects from
 --the environment or monsters)
 playerLight :: Player -> Int
 playerLight player = (lightRadius player) + 1 + innerLight 
@@ -68,6 +78,8 @@ playerLight player = (lightRadius player) + 1 + innerLight
     innerLight = if InnerLight `elem` (abilities player)
                   then 1 else 0
 
+-- Apply effects of various songs; should actually maybe be in
+-- CombatState.hs, since these are really only used there.
 applySongTrees :: Player -> Player
 applySongTrees p =
   let extraLight = (getSongValue SongTrees p) `quot` 5
@@ -113,7 +125,7 @@ modifyCritThreshold func player =
 
      
 
---Returns the effective song strength for the given Song:
+-- | Returns the effective song strength for the given Song:
 --the player's song score if the player is currently singing that song
 --(or song score - 5 if the song is a minor theme) and 0 otherwise.
 getSongValue :: Song -> Player -> Int
@@ -127,6 +139,9 @@ getSongValue song' player =
       | s2 == song' -> max 0 $ (song player) - 5
       | otherwise -> 0
 
+-- | Calculates a player's critical threshold modifiers from abilities
+-- (Power, Finesse and Subtlety). The weapon's contribution is computed
+-- elsewhere.
 playerCritMods :: Player -> Double
 playerCritMods player =
   let finesse = if player `hasAbility` T.Finesse
