@@ -1,5 +1,8 @@
+-- | A simple fight simulator for Sil 1.1.1; see the README for
+-- a more thorough introduction.
 module Main (fight,
              FightStats,
+             summarize,
              damGiven,
              critsGiven,
              damGivenPercent,
@@ -33,44 +36,77 @@ import qualified Numeric.Probability.Transition as TR
 import qualified Numeric.Probability.Simulation as S
 
 
-data FightStats = FightStats { damGiven :: Dist, 
-                               critsGiven :: [Dist],
-                               confusionTurnsInflicted :: Dist,
-                               damGivenPercent :: Dist, 
-                               damTaken :: [Dist], 
-                               player :: P.Player, 
-                               opponent :: M.Monster
-                             }
+-- | 'FightStats' contains all the statistics that fsil computes.
+data FightStats = FightStats { 
+  damGiven :: Dist, 
+  -- ^ Distribution of the damage inflicted by the player on the monster
+  -- in a single turn (using all the attacks that the player has if 
+  -- they have several due to Two-Weapon Fighting or Rapid Attack.)
+  critsGiven :: [Dist],
+  -- ^ Distributions of the number of extra damage dice that the player
+  -- gets due to a critical hit, separately for each of the player's
+  -- attacks.
+  confusionTurnsInflicted :: Dist,
+  -- ^ Distribution of the number of turns of confusion inflicted on
+  -- the monster due to a critical hit if the player has the
+  -- Cruel Blow ability.
+  damGivenPercent :: Dist, 
+  -- ^ Distribution of the damage inflicted by the player on the monster
+  -- as a percentage of the monster's maximum hit points; monster max hp
+  -- is a random number, so this cannot be computed directly from 
+  -- @damGiven@ above.
+   damTaken :: [Dist], 
+   -- ^ Distributions of the damage inflicted on the player by the monster,
+   -- separately for each of the monster's attacks if the monster has
+   -- several. (Monsters that have several attacks don't attack with both
+   -- attacks at the same time.)
+  player :: P.Player, 
+  opponent :: M.Monster
+}
 
 
-toHitDist :: Int -> Int -> RInt
-toHitDist accuracy evasion = 
+--All the functions that follow use RInt as a monad, as defined in
+--Numeric.Probability.Random; 
+--http://web.engr.oregonstate.edu/~erwig/papers/PFP_JFP06.pdf is a good
+--explanation of the idea and implementation. 
+
+
+--Returns the net to-hit roll, i.e. the difference between the attacker's 
+--to-hit roll and the defender's evasion roll
+netToHitDist :: Int -> Int -> RInt
+netToHitDist accuracy evasion = 
   do 
     toHitRoll <- (+accuracy) `fmap` (dist $ 1 `d` 20)
     evasionRoll <- (+evasion) `fmap` (dist $ 1 `d` 20)
     return $ toHitRoll - evasionRoll
 
 
+--Calculate the number of critical hits based on the base threshold
+--and the net to-hit score.
 nCrits :: Double -> Int -> Int
 nCrits criticalThreshold toHitRoll 
   | toHitRoll < 1 = 0
   | otherwise =
     floor $ (fromIntegral toHitRoll + 0.4) / criticalThreshold
 
-damageDist :: Dice -> Double -> [Dice] -> RInt
-damageDist damDice sharpness protDiceList =
+
+--Roll damage and subtract protection roll (modified by sharpness).
+netDamageDist :: Dice -> Double -> [Dice] -> RInt
+netDamageDist damDice sharpness protDiceList =
   do
     damage <-  dist damDice
     protection <-  sumDice protDiceList
     let modifiedProt = floor $ fromIntegral protection * sharpness
     return $ max 0 (damage - modifiedProt)
 
+--Take an Attack and the defender's evasion score and return the
+--net damage distribution for that attack.
 attackDamDist :: T.Attack -> Int -> [Dice] -> RInt
 attackDamDist attack evasion protDice =
   do
    toHit <- if (T.alwaysHits attack)
      then return 1
-     else toHitDist (T.accuracy attack) evasion
+     else netToHitDist (T.accuracy attack) evasion
    if toHit < 1 then
      return 0
    else do
@@ -79,8 +115,12 @@ attackDamDist attack evasion protDice =
          nCritDice = if (T.canCrit attack)
                        then nCrits (T.critThreshold attack) toHit
                        else 0
-     damageDist damDice sharpness protDice
+     netDamageDist damDice sharpness protDice
 
+--Take a list of attacks and the defender's evasion score and protection
+--dice, and return the net damage distribution for the attacks being applied
+--one after another (e.g. the player attacks the monster with two attacks
+--from Rapid Attack or Two-Weapon Fighting)
 attackSeqDamDist :: [T.Attack] -> Int -> [Dice] -> RInt
 attackSeqDamDist [] _ _ = return 0
 attackSeqDamDist (a:as) evasion protDice = 
@@ -89,15 +129,20 @@ attackSeqDamDist (a:as) evasion protDice =
     dam <- attackDamDist a evasion protDice
     return $ dam + damRest
 
+--Take an attack and the defender's evasion score and return the distribution
+--of the number of critical dice that the attacker gets.
 attackNCritsDist :: T.Attack -> Int -> RInt
 attackNCritsDist attack evasion =
   do
-   toHit <- toHitDist (T.accuracy attack) evasion
+   toHit <- netToHitDist (T.accuracy attack) evasion
    let nCritDice = if (T.canCrit attack)
                    then nCrits (T.critThreshold attack) toHit
                    else 0
    return nCritDice
 
+--Take a list of attacks and the defender's evasion score and return the 
+--distributions of the number of critical dice that the attacker gets,
+--separately for each attack in the list.
 attackSeqNCritsDist :: [T.Attack] -> Int -> [RInt]
 attackSeqNCritsDist [] _ = []
 attackSeqNCritsDist (a:as) evasion =
@@ -119,13 +164,15 @@ cruelBlowTurns nCritsDists monster =
       else return 0
 
 
-
+--Roll a skill check.
 skillCheck :: Int -> Int -> RInt
 skillCheck skill difficulty = do
   skillRoll <- (+ skill) `fmap` (dist $ 1 `d` 10)
   diffRoll <- (+ difficulty) `fmap` (dist $ 1 `d` 10)
   return $ skillRoll - diffRoll
 
+--Take a net damage distribution and return a distribution
+--of the damage as a percentage of the monster's max hp.
 damDistPercent :: RInt -> M.Monster -> RInt
 damDistPercent damDist m =
   do
@@ -134,6 +181,9 @@ damDistPercent damDist m =
     return $ 100 - (100 * (maxHP - damage)) `quot` maxHP
 
 
+--Take a player, a monster and a number of samples to simulate,
+--and produce a FightStats. The distributions in FightStats are
+--empirical distributions simulated using nSamples samples.
 fight :: P.Player -> M.Monster -> Int -> IO FightStats
 fight player monster nSamples =
   let (_,(p,m)) = runState CS.applyCombatModifiers (player,monster)
@@ -166,6 +216,7 @@ fight player monster nSamples =
                  player = p, 
                  opponent = m}
 
+-- | Pretty-print a FightStats
 summarize :: FightStats -> String
 summarize fs = "SUMMARY AND MISC INFORMATION\n\n" 
    ++ P.name (player fs) ++ " vs " ++ M.name (opponent fs) 

@@ -37,7 +37,7 @@ pprint decimals d = unlines $ map printPair $ (D.sortElem . D.decons . D.norm) d
 
 
 -- | 'RInt' represents a random integer variable following
--- some distribution.
+-- some distribution. 
 type RInt = R.T Int
 
 -- | Draw @n@ samples from the distribution of @rand_var@. The result is an
