@@ -1,0 +1,9 @@
+-Subtlety should check for a weapon being two-handed; this probably requires adding a 'two-handed' flag to Equipment
+
+-Add "Chance to riposte"
+
+-Read songs from char dump; currently fsil actually gets confused if the dump has a "Song  Sharpness" entry
+
+-Taking into account abilities and songs is a bit of a mess right now; it would be clearer if all effects were applied in the same place
+
+-Read all player stats and skills and compute attack stats based on those instead of reading the attack tuples directly from the char dump.
