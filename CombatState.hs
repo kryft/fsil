@@ -162,10 +162,6 @@ applyLightPenalties = do
         applyPenalty = (\s -> s - lightPenalty)
     modifyMonster $ M.modifyEvasionWith applyPenalty
     modifyMonster $ M.modifyAccuracyWith applyPenalty
-  --Can the monster see the player?
-  when (playerNetLight p m < 1) $ do
-    modifyMonster $ M.modifyEvasionWith (divBy 2)
-    modifyMonster $ M.modifyAccuracyWith (divBy 2)
 
 --If the player is wielding a weapon that slays the monster, add
 --a damage die and increase the player's light radius
