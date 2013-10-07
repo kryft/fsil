@@ -2,6 +2,8 @@
 
 -Add "Chance to riposte"
 
+-Take monster speed into account and add command line flags for player being slowed or hasted
+
 -Read songs from char dump; currently fsil actually gets confused if the dump has a "Song  Sharpness" entry
 
 -Taking into account abilities and songs is a bit of a mess right now; it would be clearer if all effects were applied in the same place
