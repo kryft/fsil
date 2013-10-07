@@ -1,3 +1,5 @@
+-- | Module for the 'Player' type and related functions. 'Player' represents
+-- the (state of the) player in Sil, containing 
 module Player where
 
 import Types as T
@@ -11,16 +13,22 @@ playerBaseCritThres = 7.0
 
 -- | The state of a player as far as fsil is concerned, so hit points
 -- etc are not included, since we're currently just simulating damage
--- distributions for single attacks by a player or monster.
+-- distributions for single attacks.
 data Player = Player { name :: String,
                        attacks :: [Attack],
+                       -- ^ All the player's melee attacks (only one element
+                       -- unless the player has certain abilities).
                        evasion :: Int,
+                       -- ^ Evasion score.
                        protDice :: [Dice],
+                       -- ^ All the protection dice that the player has cu
                        lightRadius :: Int,
                        activeSongs :: Singing,
+                       -- ^ Songs currently sung by the player.
                        resistances :: Map.Map Element Int,
                        abilities :: [Ability],
                        equipment :: [Equipment],
+                       -- ^ List of equipped items.
                        will :: Int,
                        song :: Int,
                        stealth :: Int,
