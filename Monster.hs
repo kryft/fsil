@@ -17,39 +17,61 @@ data Alertness = Alert | Unwary | Sleeping
 unseen :: Monster -> Monster
 unseen m = m {seenByPlayer = False}
 
-sleeping :: Monster -> Monster
-sleeping m = m { alertness = Sleeping }
-
-unwary :: Monster -> Monster
-unwary m = m {alertness = Unwary}
-
+-- | 'Monster' represents a Sil monster, containing all the information
+-- we need to simulate attacks by or against the monster. Many of the
+-- fields are identical in name and function to their 'Player' 
+-- counterparts.
 data Monster = Monster { name :: String, 
-                         depth :: Int,
+                         depth :: Int, 
+                         -- ^ the depth at which a monster is usually found;
+                         -- doesn't affect any combat calculations,  but can 
+                         -- be interesting for 
                          attacks :: [Attack], 
                          evasion :: Int,
                          lightRadius :: Int,
                          alertness :: Alertness,
                          protDice :: Dice,
                          speed :: Int,
+                         -- ^ The monster's speed, between 1 and 4. Currently
+                         -- not used by fsil.
                          will :: Int,
                          health :: Dice,
+                         -- ^ The dice rolled to determine the monster's max
+                         -- hitpoints. 
                          hatesLight :: Bool,
+                         -- ^Some monsters are vulnerable to strong light.
                          glows :: Bool,
+                         -- ^Balrogs glow, meaning that they're always 
+                         -- visible.
                          seenByPlayer :: Bool, 
+                         -- Fsil doesn't currently do perception checks for
+                         -- whether the player can see an invisible monster
+                         -- or not; if SeenByPlayer is True, the player can
+                         -- always see the monster (if it's not too dark),
+                         -- and if SeenByPlayer is False, the monster will
+                         -- be invisible regardless of light. Defaults to
+                         -- True for all monsters.  
                          resistances :: Map.Map Element Int,
                          criticalRes :: MonsterCritRes,
                          slainBy :: Maybe Slay,
+                         -- ^ SlayOrcs if the monster is an orc, etc;
+                         -- Nothing if there is no slay for this monster
+                         -- in the game.
                          onLitSquare :: Bool
                        } deriving Show
 
 
 dungeonLight m = if onLitSquare m then 1 else 0
 
+-- | Check whether a monster's name matches a regular expression (given as
+-- a string)
 matchMonster :: String -> Monster -> Bool
 matchMonster regex mons = (name mons) =~ regex
 
 baseCritThreshold = 7.0
 
+-- | The base critical threshold of a monster is determined by it's damage
+-- dice.
 monsterCritThreshold :: Dice -> Double
 monsterCritThreshold dice = baseCritThreshold + 2 * fromIntegral (nDice dice)
 
