@@ -3,22 +3,38 @@ INTRODUCTION
 Fsil is a simple fight simulator for the roguelike Sil (see 
 http://www.amirrorclear.net/flowers/game/sil/index.html). Apart from
 wanting to get a bit of practical Haskell experience (this is my first actual
-program) and play with the probability monad, I wrote Fsil to help answer 
-questions like the following:
+program) and play with the probability monad, I wrote Fsil to help me with
+important life decisions like the following:
 
--Should my character use this weapon or that? Two-handed or shield?
--Should I take subtlety? 
+-Which of these two weapons that I just found should I use? 
+-Which abilities would help my survival the most right now?
 -How risky is it for me to fight this monster in one-on-one combat?
--What are my odds of oneshotting this sleeping monster?
+-Can I oneshot this sleeping serpent, or at least confuse it for sufficiently
+many turns that I can finish it off safely?
 
 Fsil takes a Sil 1.1.1 character dump file and the name of a monster, and 
-computes approximate probability distributions for a few quantities:
+simulates probability distributions for a few quantities:
 
--The amount of damage that the player deals to the monster in a single round
+the amount of damage that the player deals to the monster in a single round
 (both in terms of absolute damage and as a percentage of the monster's 
-maximum hitpoints)
--The number of extra damage dice that the player gets from critical hits
--The amount of damage that the monster deals to the player in a single blow
+maximum hitpoints);
+the number of extra damage dice that the player gets from critical hits;
+the number of turns of confusion that the player will inflict on the monster
+if the player has the ability Cruel Blow;
+and the amount of damage that the monster deals to the player in a single blow.
+
+Fsil doesn't try to model every mechanic in Sil combat. When choosing what to
+simulate and report, I tried to focus on things that seemed 1) relevant to
+some important in-game decision, 2) relatively straight-forward to simulate
+accurately based on very limited information (the character dump and the
+name of the monster) and 3) not fairly obvious to the (non-expert) player to 
+begin with. 
+
+Fsil does model brands, weapon sharpness, resistances, light effects, multiple 
+attacks from Rapid Attack or Two Weapon Fighting, some songs (Trees, Staying, 
+Sharpness) and some player abilities (Finesse, Power, Subtlety, Hardiness, 
+Heavy Armour Use, Assassination, Critical Resistance, Inner Light and Woven 
+Themes).
 
 Fsil prints cumulative distribution functions (e.g., the chance of the 
 player dealing or suffering at least X damage) and some other information,
@@ -26,30 +42,6 @@ such as the player's effective Dark resistance and whether the player is
 able to see the monster or not (based on the player's and the monster's
 light radius). If a monster has several attacks, data for the attacks is
 listed separately.
-
-Fsil doesn't try to model every mechanic in Sil combat. I've generally left out
-mechanics whose effect on the damage of a single attack is hard to determine 
-without a larger context, such as many player abilities. I've also left out
-mechanics whose effect is relatively obvious without any simulation, such as 
-status effects like fear or confusion, or even attack speed (just look at how
-much damage that fast monster does with one attack and keep in mind that it 
-could get two of those.) 
-
-If you assume that neither the player nor the monster is under a status 
-effect, that the player isn't under the effect of a situational ability 
-(such as Concentration or Dodging) and that they are standing next to each 
-other without any other monsters nearby, Fsil output should be accurate, 
-barring bugs.
-
-Fsil does model brands, weapon sharpness resistances, light effects, multiple 
-attacks from Rapid Attack or Two Weapon Fighting, some songs (Trees, Staying, 
-Sharpness) and some player abilities (Finesse, Power, Subtlety, Hardiness, 
-Heavy Armour Use, Assassination, Critical Resistance, Inner Light and Woven 
-Themes).
-
-In the future I might add support for a more full-blown simulation of several 
-rounds of combat; if I do, I will probably add many of the mechanics that I've 
-left out for the moment.
 
 
 INSTALLATION
