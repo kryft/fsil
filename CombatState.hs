@@ -1,4 +1,12 @@
-module CombatState where
+-- | The 'CombatState' module contains code that is stateful in the sense
+-- that it applies various modifiers to the player and the monster, such
+-- as checking whether the player has enough light to see the monster and
+-- modifying evasion and accuracy accordingly. 
+module CombatState(CombatState(),
+                   modifyPlayer,
+                   modifyMonster,
+                   applyCombatModifiers)
+                   where
 
 import qualified Monster as M
 import qualified Player as P
@@ -9,15 +17,20 @@ import Control.Monad.State
 import Control.Monad
 import Data.Maybe(isJust,fromJust)
 
+-- | 'CombatState' represents the state of the player and the monster.
 type CombatState = State (P.Player, M.Monster)
 
+-- | Apply a function @f@ to the current state of the player and set
+-- the state to the result of the function.
 modifyPlayer :: (P.Player -> P.Player) -> CombatState ()
 modifyPlayer f = get >>= \(p,m) -> put $ (f p, m)
 
+-- | Apply a function @f@ to the current state of the monster and set
+-- the state to the result of the function.
 modifyMonster :: (M.Monster -> M.Monster) -> CombatState ()
 modifyMonster f = get >>= \(p,m) -> put $ (p, f m)
 
---Apply all modifiers relevant to combat: songs, alertness,
+-- | Calculate and apply all modifiers relevant to combat: songs, alertness,
 --stealth, etc
 applyCombatModifiers :: CombatState ()
 applyCombatModifiers = do
@@ -53,6 +66,8 @@ monsterNetLight p m =
           | M.lightRadius m > 0 = M.lightRadius m + 1
           | otherwise = 0
 
+--Apply player abilities that modify the player's critical
+--threshold.
 applyCritAbilities :: CombatState ()
 applyCritAbilities = do
   (p,_) <- get
@@ -60,8 +75,7 @@ applyCritAbilities = do
   modifyPlayer $ P.modifyCritThreshold (+ critMod)
     
 
-
-
+--Apply player and monster critical resistance. 
 applyCritRes :: CombatState ()
 applyCritRes = do
   (p,m) <- get
@@ -77,6 +91,8 @@ applyCritRes = do
         setNoCrit a = a {T.canCrit = False} 
     modifyPlayer $ \p -> p {P.attacks = pAttacks}
 
+--Apply bonuses for the Assassination ability if the player
+--has it and the monster is unaware or asleep.
 applyAssassination :: CombatState ()
 applyAssassination = do
   (p,m) <- get
@@ -85,6 +101,10 @@ applyAssassination = do
     modifyPlayer $ P.modifyAccuracyWith (+ (P.stealth p))
 
 
+--Add damage dice for brands that the attacker has and which
+--the defender does not resist. No extra dice if the defender
+--is resistant; one extra die if the defender has 0 resistance; and
+--two extra dice if the defender is vulnerable.
 applyBrands :: CombatState ()
 applyBrands = do
   (p,m) <- get
@@ -107,6 +127,8 @@ applyBrand rMap attack =
   in attack { T.damage = addDice totalExtraDice damDice }
 
 --Monsters take evasion penalties for being unwary or asleep.
+--(This is separate from the assassination bonus that a player with
+--the Assassination ability gets.)
 applyAlertness :: CombatState ()
 applyAlertness = do
   (_,m) <- get
@@ -144,6 +166,7 @@ updateDarkResistance = do
       newMap = (Map.insert Dark darkRes) (P.resistances p)
   put $ (p {P.resistances = newMap}, m)
 
+--Apply penalties due to light
 applyLightPenalties :: CombatState ()
 applyLightPenalties = do
   (p,m) <- get
@@ -184,7 +207,3 @@ applySlay attack = do
     return $ attack {T.damage = newDamage} 
   else
     return attack
-    
-
-
-

@@ -1,3 +1,4 @@
+-- | Handles command line arguments for fsil.
 module CommandLineArgs (FsilOptions,
                         charDumpFile,
                         monsterName,
