@@ -61,7 +61,7 @@ damageDist :: Dice -> Double -> [Dice] -> RInt
 damageDist damDice sharpness protDiceList =
   do
     damage <-  dist damDice
-    protection <-  sumDiceDists protDiceList
+    protection <-  sumDice protDiceList
     let modifiedProt = floor $ fromIntegral protection * sharpness
     return $ max 0 (damage - modifiedProt)
 
