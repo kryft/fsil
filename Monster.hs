@@ -1,14 +1,25 @@
+-- | Module for the 'Monster' type and related functions. 'Monster' 
+-- represents a Sil monster, containing all the information we need
+-- to simulate attacks by or against the monster.
 module Monster where
 
 import qualified Data.Map as Map
 import Rdice
 import Types
 import Text.Regex.Posix ((=~))
+import Control.Applicative
+import Data.Maybe(fromJust)
+import Data.List(find)
 --import Data.List(filter,null)
 
+-- | A monster's critical resistance: most monsters have none, but some
+-- are resistance (halve crit dice) or completely immune.
 data MonsterCritRes = NoCritRes | CritResistant | CritImmune
   deriving (Show,Eq)
 
+-- | A monster's alertness; the default is 'Alert', but it can be set
+-- to 'Unwary' or 'Sleeping' to simulate attacks against an unwary or
+-- sleeping monster.
 data Alertness = Alert | Unwary | Sleeping
   deriving (Show,Eq)
 
@@ -101,10 +112,10 @@ modifyCritThreshold func monster =
 getMonster :: String -> [Monster] -> Monster
 getMonster nameRegex monsList = 
   let startsWithName = '^' : nameRegex
-      matchingMonsters = filter (matchMonster startsWithName) monsList
-      matchingMonsters' = filter (matchMonster nameRegex) monsList
-  in if null matchingMonsters
-        then if null matchingMonsters'
-             then head monsList --default Orc scout :P
-             else head matchingMonsters'
-        else head matchingMonsters
+      completeName = startsWithName ++ "$"
+      completeMatch = find (matchMonster completeName) monsList
+      matchesBeginning = find (matchMonster startsWithName) monsList
+      matchesSomewhere = find (matchMonster nameRegex) monsList
+      defaultValue = head monsList
+  in fromJust $ completeMatch <|> matchesBeginning <|> 
+                  matchesSomewhere <|> Just defaultValue
