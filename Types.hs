@@ -8,7 +8,7 @@ import Data.List(group)
 -- combat model.
 data Ability = Finesse | Subtlety | Power | CritRes | Hardiness 
   | TwoWeaponFighting | RapidAttack | InnerLight | Assassination
-  | HeavyArmourUse | KeenSenses
+  | HeavyArmourUse | KeenSenses | PoisonResistance
   deriving (Show, Eq)
 
 -- | A song (player ability). Currently only three songs are included

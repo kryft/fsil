@@ -54,6 +54,10 @@ charDumpFile =
           inferHeavyArmourUseBonus listedProtRange eqProtMax abilities will 
         eqAbilities' = concat $ map eqAbilities equipment
         allAbilities = abilities ++ eqAbilities'
+        eqRes = resistancesFrom equipment
+        resists = if (T.PoisonResistance `elem` abilities)
+          then Map.insertWith (+) T.Poison 1 eqRes
+          else eqRes
         attacks = makeAttacks attackTuples allAbilities equipment
     return $ P.Player 
       { P.name = name,
@@ -61,7 +65,7 @@ charDumpFile =
         P.lightRadius = lightRadius,
         P.evasion = evasion,
         P.stealth = stealth,
-        P.resistances = resistancesFrom equipment,
+        P.resistances = resists,
         P.will = will,
         P.song = song,
         P.activeSongs = Quiet,
@@ -295,6 +299,7 @@ parseElement = do
              try (string "fire") <|>
              try (string "cold") <|>
              try (string "poison") <|>
+             try (string "venom") <|>
              try (string "lightning")
   return $ stringToElement element
   where 
@@ -305,6 +310,7 @@ parseElement = do
         "frost" -> Cold
         "cold" -> Cold
         "poison" -> Poison
+        "venom" -> Poison
         "lightning" -> Lightning
 
 parseSlay :: Parser Slay
@@ -340,7 +346,8 @@ parseAbility = do
              try (mlString "Inner Light") <|>
              try (mlString "Critical Resistance") <|>
              try (mlString "Keen Senses") <|>
-             try (mlString "Heavy Armour Use") 
+             try (mlString "Heavy Armour Use") <|>
+             try (mlString "Poison Resistance") 
   return $ stringToAbility ability
   where
     stringToAbility :: String -> Ability
@@ -357,6 +364,7 @@ parseAbility = do
         "Assassination" -> Assassination
         "Heavy Armour Use" -> HeavyArmourUse
         "Keen Senses" -> KeenSenses
+        "Poison Resistance" -> PoisonResistance
 
 --Parse abilities from the [Notes] section of a Sil char dump
 parseAbilities = many $ (try $ ignoreUntil validAbility eof)
