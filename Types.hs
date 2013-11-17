@@ -17,36 +17,61 @@ data Song = SongSharp | SongTrees | SongStay
   deriving (Show, Eq)
 
 -- | 'Singing' represents the player's singing status: either the player
--- is 'Quiet', singing 'OneSong' or singing two songs with 'WovenThemes'. 
+-- is 'Quiet', singing a song or singing two songs with 'WovenThemes'. 
 data Singing = Quiet | OneSong Song | WovenThemes (Song, Song)
   deriving (Show, Eq)
 
 
--- | Represents whether an equipped item is in the main weapon slot, the 
--- off-hand slot, or another slot.
-data EqSlot = MainHand | OffHand | OtherSlot
+-- | Represents one of the equipment slots available to the player. 
+data EqSlot = MainHand | BowSlot | FirstRing | SecondRing | AmuletSlot |
+  LightSlot | ArmorSlot | CloakSlot | OffHand | HelmSlot | GloveSlot | 
+  BootSlot | FirstQuiver | SecondQuiver
+  deriving (Show, Eq, Ord)
+
+type EquipmentMap = Map.Map EqSlot (Maybe Equippable)
+
+data WeaponHandedness = OneHanded | HandAndAHalf | TwoHanded
   deriving (Show, Eq)
 
---Currently we only keep track of information that can only be obtained by
---looking at the item's description in the character sheet
 
--- | Represents an item equipped by the player. 
-data Equipment = Equipment 
-  { 
-    eqSlot :: EqSlot, 
-    eqName :: String,
-    eqWeight :: Maybe Double, -- ^Nothing if the item is not a weapon
-    eqIsMeleeWeapon :: Bool,
-    eqProtDice :: Maybe Dice, -- ^Protection granted by equipping this item
-    eqResistances :: [Element],
-    eqVulnerabilities :: [Element], 
-    eqAbilities :: [Ability], --Abilities granted by the item
-    --The last three are only relevant for weapons
-    eqBrands :: [Element], 
-    eqSlays :: [Slay], 
-    eqSharpness :: Double 
+-- | An item that can be equipped by the player. The BaseEquip value encodes
+-- properties that all equippable items have, and EquipType encodes the type
+-- of item and properties that are specific to that type.
+data Equippable = Equippable BaseEquip EquipType
+  deriving (Show, Eq)
+
+data BaseEquip = BaseEquip { 
+    beqName :: String,
+    beqSlot :: EqSlot,
+    beqProtDice :: Maybe Dice, -- ^Protection granted by equipping this item
+    beqResistances :: [Element],
+    beqVulnerabilities :: [Element], 
+    beqAbilities :: [Ability] --Abilities granted by the item
   }
   deriving (Show, Eq)
+
+eqName (Equippable (BaseEquip {beqName = x}) _) = x
+eqSlot (Equippable (BaseEquip {beqSlot = x}) _) = x
+eqProtDice (Equippable (BaseEquip {beqProtDice = x}) _) = x
+eqResistances (Equippable (BaseEquip {beqResistances = x}) _) = x
+eqVulnerabilities (Equippable (BaseEquip {beqVulnerabilities = x}) _) = x
+eqAbilities (Equippable (BaseEquip {beqAbilities = x}) _) = x
+
+data EquipType = 
+  Weapon {
+    wpWeight :: Double, -- ^ Only weapons have weight listed in Sil char dumps.
+    wpBrands :: [Element], 
+    wpSlays :: [Slay], 
+    wpSharpness :: Double,
+    wpHandedness :: WeaponHandedness} 
+  | Other 
+  deriving (Show, Eq)
+  -- Will replace Other with the following once simulation for equipment
+  -- other than weapons is in place:
+  -- Shield | Ring | Amulet | BodyArmor | Helm | Gloves | Boots 
+
+
+
 
 -- | One of the elements in Sil: fire, cold, poison, dark or lightning.
 -- Attacks can be branded with these, and players and monsters can be
@@ -54,6 +79,10 @@ data Equipment = Equipment
 data Element = Fire | Cold | Poison | Dark | Lightning 
   deriving (Eq, Show, Ord)
 
+--Values represent resistance levels; 0 means no resistance or vulnerability.
+type ResistanceMap = Map.Map Element Int
+
+noResistance :: ResistanceMap
 noResistance = Map.fromList [(Fire,0), (Cold,0), (Poison,0), (Lightning,0), 
   (Dark,0)]
 
@@ -61,10 +90,7 @@ noResistance = Map.fromList [(Fire,0), (Cold,0), (Poison,0), (Lightning,0),
 -- that represents their vulnerabilities. If an element occurs N times in
 -- the resistance list, this counts as N levels of resistance; likewise
 -- for vulnerabilities.
---
--- Returns a map with 'Element' keys and 'Int' values that can be queried
--- for resistance level (0 represents no resistance or vulnerability).
-makeResistanceMap :: [Element] -> [Element] -> Map.Map Element Int
+makeResistanceMap :: [Element] -> [Element] -> ResistanceMap
 makeResistanceMap resList vulnList = 
   let groupedRes = group resList
       groupedVuln = group vulnList

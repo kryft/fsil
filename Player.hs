@@ -1,10 +1,12 @@
--- | Module for the 'Player' type and related functions. 'Player' represents
--- the (state of the) player in Sil, containing 
+-- | Module for the 'Player' type and related functions. 'Player' encodes
+-- all the information about the (state of the) player that is relevant to
+-- our combat model.
 module Player where
 
 import Types as T
 import Rdice
 import qualified Data.Map as Map
+import Data.Maybe
 
 -- | The base number by which the player's to-hit roll needs to exceed
 --a monster's evasion roll for a critical hit to occur. This is 7.0 in
@@ -25,10 +27,9 @@ data Player = Player { name :: String,
                        lightRadius :: Int,
                        activeSongs :: Singing,
                        -- ^ Songs currently sung by the player.
-                       resistances :: Map.Map Element Int,
+                       resistances :: ResistanceMap,
                        abilities :: [Ability],
-                       equipment :: [Equipment],
-                       -- ^ List of equipped items.
+                       equipment :: EquipmentMap,
                        will :: Int,
                        song :: Int,
                        stealth :: Int,
@@ -43,20 +44,28 @@ blankPlayer = Player { name = "",
                        activeSongs = Quiet,
                        resistances = T.noResistance,
                        abilities = [],
-                       equipment = [],
+                       equipment = Map.empty,
                        will = 0,
                        song = 0,
                        stealth = 0,
                        onLitSquare = False }
 
 
--- | Checks whether the player's off-hand is empty (matters for
--- the Subtlety ability).
-hasEmptyOffHand :: Player -> Bool
-hasEmptyOffHand p = (T.eqName offHandItem) == "(nothing)"
-  where 
-    offHandItem = head $ filter isOffHand (equipment p)
-    isOffHand x = (T.eqSlot x) == T.OffHand
+-- | Checks whether the player is using a one-handed weapon with an
+-- empty off-hand (matters for the Subtlety ability).
+fightingOneHanded :: Player -> Bool
+fightingOneHanded p = offHandIsEmpty && isOneHanded mainHand
+  where
+    eq = equipment p
+    offHandIsEmpty = isNothing $ eq Map.! T.OffHand
+    mainHand = eq Map.! T.MainHand
+    isOneHanded Nothing = False
+    isOneHanded (Just (Equippable _  (Weapon {wpHandedness = h}))) 
+      = T.OneHanded == h
+    isOneHanded (Just (Equippable _ Other)) 
+      = error "mainhand contains non-weapon" -- shouldn't happen
+--    isOneHanded (Just (Equippable _ (Weapon w))) = T.OneHanded == T.wpHandedness w
+
 
 -- | Sets the player's activeSongs to the parameter.
 singing :: Singing -> Player -> Player
@@ -156,7 +165,7 @@ playerCritMods player =
                   then -1.0
                   else 0
       subtlety = if player `hasAbility` T.Subtlety 
-                    && hasEmptyOffHand player
+                    && fightingOneHanded player
                    then -2.0
                    else 0
       power = if player `hasAbility` T.Power

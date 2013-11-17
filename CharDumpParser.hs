@@ -11,6 +11,7 @@ import qualified Data.Map as Map
 import Rdice (Dice(ZeroDie), d, nSides, nDice)
 import GeneralParse
 import Types as T
+import Control.Monad (when)
 
 
 -- | Takes the name of a char dump file and tries to construct a Player
@@ -47,12 +48,13 @@ charDumpFile =
     equipment <- parseEquipment
     skipTill "[Notes]"
     abilities <- parseAbilities
-    let protDice = 
-          (filter (/= ZeroDie)) . catMaybes $ map eqProtDice equipment
+    let items = catMaybes $ Map.elems equipment
+        protDice = 
+          (filter (/= ZeroDie)) . catMaybes $ map eqProtDice items
         eqProtMax = sum $ map (\x -> nDice x * nSides x) protDice
         heavyArmourUseProtBonus = 
           inferHeavyArmourUseBonus listedProtRange eqProtMax abilities will 
-        eqAbilities' = concat $ map eqAbilities equipment
+        eqAbilities' = concat $ map eqAbilities items
         allAbilities = abilities ++ eqAbilities'
         eqRes = resistancesFrom equipment
         resists = if (T.PoisonResistance `elem` abilities)
@@ -138,27 +140,51 @@ parseProtRange = try $ do
 
 
 --Parse the "Equipment" section of the char dump file
-parseEquipment :: Parser [Equipment]
+parseEquipment :: Parser EquipmentMap
 parseEquipment = do
   anyChar `manyTill` lookAhead slotID
-  equippedItem `sepEndBy` endItemDesc
+  eqSlots <- eqSlotEntry `sepEndBy` endItemDesc
+  return $ foldr (uncurry Map.insert) Map.empty eqSlots 
 
+
+--Description of a single equipment slot; can have an item or be empty.
+eqSlotEntry :: Parser (EqSlot, Maybe Equippable)
+eqSlotEntry = do
+  slotType <- eqSlotType
+  slotContent <- try emptySlot <|> fmap Just (item slotType)
+  return (slotType, slotContent)
+ 
 --Beginning of an equipment slot description, e.g. "a)"
 slotID :: Parser String
 slotID = try $ oneOf "abcdefghijklmn" >>= \id -> char ')' >> return [id, ')']
 
---Description of a single equipped item
-equippedItem :: Parser Equipment
-equippedItem = do
-  slotStr <- slotID
-  let slotType = case slotStr of
-                    "a)" -> MainHand
-                    "i)" -> OffHand
-                    _    -> OtherSlot
+eqSlotType :: Parser EqSlot
+eqSlotType = fmap idToSlot slotID
+  where
+  idToSlot slotStr = case slotStr of
+    "a)" -> MainHand
+    "b)" -> BowSlot
+    "c)" -> FirstRing
+    "d)" -> SecondRing
+    "e)" -> AmuletSlot
+    "f)" -> LightSlot
+    "g)" -> ArmorSlot
+    "h)" -> CloakSlot
+    "i)" -> OffHand
+    "j)" -> HelmSlot
+    "k)" -> GloveSlot
+    "l)" -> BootSlot
+    "m)" -> FirstQuiver
+    "n)" -> SecondQuiver
+
+emptySlot :: Parser (Maybe Equippable)
+emptySlot = spaces >> (string "(nothing)") >> spaces >> eol >> return Nothing
+
+item :: T.EqSlot -> Parser Equippable
+item slotType = do
   name <- do
     spaces  
-    (try $ string "(nothing)") <|>
-      (anyChar `manyTill` (lookAhead $ (oneOf "([<") <|> (eol >> return ' ')))
+    (anyChar `manyTill` (lookAhead $ (oneOf "([<") <|> (eol >> return ' ')))
 
   optional $ try $ between (char '(') (char ')') 
     (string "Defender" <|> string "Vampiric" <|> string "Poisoned")
@@ -178,31 +204,35 @@ equippedItem = do
   --weight for other items anyway)
   many spaceBar
   maybeWeight <- option Nothing $ fmap Just parseWeight
-  let isMeleeWeapon = isJust maybeWeight && slotType /= OtherSlot
+  let isMeleeWeapon = isJust maybeWeight && slotType /= BowSlot
   resistances <- lookAhead $ parseResistances
   vulnerabilities <- lookAhead $ parseVulnerabilities
   abilities <- lookAhead $ parseItemAbilities
-  --Only look for slays, brands and sharpness if it's a weapon
-  brands <- if isMeleeWeapon then lookAhead parseBrands else return []
-  slays <- if isMeleeWeapon then lookAhead parseSlays else return []
-  sharpness <- if isMeleeWeapon then lookAhead parseSharpness 
-                                else return 1.0
+  let baseEquip = BaseEquip { beqName = stripSpacesAtEnd $ name,
+                              beqSlot = slotType,
+                              beqProtDice = maybeProtDice,
+                              beqResistances = resistances,
+                              beqAbilities = abilities,
+                              beqVulnerabilities = vulnerabilities }
+  --Weapon-specific stuff:
+  brands <- lookAhead parseBrands 
+  slays <- lookAhead parseSlays 
+  sharpness <- lookAhead parseSharpness 
+  handedness <- lookAhead parseHandedness
+
   anyChar `manyTill` (lookAhead endItemDesc)
+  let equipSpecific  
+        | isMeleeWeapon = Weapon {wpBrands = brands,
+                              wpSlays = slays,
+                              wpSharpness = sharpness,
+                              wpHandedness = handedness,
+                              wpWeight = fromJust maybeWeight}
+        | otherwise = Other
 
-  return $ Equipment { eqName = stripSpacesAtEnd $ name,
-                       eqSlot = slotType,
-                       eqIsMeleeWeapon = isMeleeWeapon,
-                       eqProtDice = maybeProtDice,
-                       eqWeight = maybeWeight,
-                       eqResistances = resistances,
-                       eqSharpness = sharpness,
-                       eqAbilities = abilities,
-                       eqVulnerabilities = vulnerabilities,
-                       eqBrands = brands,
-                       eqSlays = slays }
+  return $ Equippable baseEquip equipSpecific
 
- 
---Parse the weight of an item (only listed and relevant for weapons)
+
+--Parse the weight of an item (char dump only lists this for weapons)
 parseWeight :: Parser Double
 parseWeight = try $ do
   spaces
@@ -283,6 +313,9 @@ parseItemAbilities = option [] $ itemDescScraper abilitySentence
 
 parseSharpness = option 1.0 $ itemDescScraper sharpSentence 
   where sharpSentence = try (mlString "cuts easily through armour" >> (return 0.5)) <|> (mlString "cuts very easily through armour" >> (return 0.0))
+
+parseHandedness = option OneHanded $ itemDescScraper handednessSentence
+  where handednessSentence = try (mlString "It does extra damage when wielded with both hands." >> (return HandAndAHalf)) <|> (mlString "It requires both hands to wield it properly." >> (return TwoHanded))
 
 
 --mlString parses a string, but allows it to span multiple lines.
@@ -373,30 +406,28 @@ parseAbilities = many $ (try $ ignoreUntil validAbility eof)
 
 --Construct Attack values for the player based on the attacks listed
 --after "Melee" in the dump.
-makeAttacks :: [(Int,Dice)] -> [Ability] -> [Equipment] -> [Attack]
+makeAttacks :: [(Int,Dice)] -> [Ability] -> EquipmentMap -> [Attack]
 makeAttacks attackTuples abilities equipment = 
   let eqSlots = inferSlots attackTuples abilities
-      weapons = map (getWeapon equipment) eqSlots 
-      getWeapon eq slot = head . filter (\x -> slot == eqSlot x) $ eq
+      weapons = map (fromJust . ((Map.!) equipment)) eqSlots 
   in map (makeAttack abilities) $ zip weapons attackTuples
 
 --Constructs a single Attack value, taking into account relevant abilities 
 --and modifiers from the weapon
-makeAttack :: [Ability] -> (Equipment, (Int, Dice)) -> Attack
-makeAttack abilities (weapon, (accuracy, damDice)) =
-  let weaponWeight = fromJust $ eqWeight weapon 
-      critThres = P.playerBaseCritThres + weaponWeight
-      brands = eqBrands weapon
-      slays = eqSlays weapon
-      sharpness = eqSharpness weapon
+makeAttack :: [Ability] -> (Equippable, (Int, Dice)) -> Attack
+makeAttack abilities (Equippable _ (Weapon {wpBrands = brands, 
+                                            wpSlays = slays, 
+                                            wpSharpness = sharpness,
+                                            wpWeight = weaponWeight})
+                                   , (accuracy, damDice)) =
+  let critThres = P.playerBaseCritThres + weaponWeight
   in Attack { accuracy = accuracy,
               damage = damDice,
               brands = brands,
               slays = slays,
               sharpness = sharpness,
               critThreshold = critThres,
-              --player attacks can always crit; this flag is for
-              --monsters
+              --player attacks can always crit
               canCrit = True,
               alwaysHits = False}
 
@@ -405,10 +436,11 @@ makeAttack abilities (weapon, (accuracy, damDice)) =
 --number indicates the player's resistance level to that element.
 --(E.g. two items providing cold resistance and one item providing
 --cold vulnerability add up to (Cold, 1) in the map.)
-resistancesFrom :: [Equipment] -> Map.Map Element Int
-resistancesFrom eq = T.makeResistanceMap resList vulnList
-  where resList = concat $ map eqResistances eq
-        vulnList = concat $ map eqVulnerabilities eq
+resistancesFrom :: EquipmentMap -> Map.Map Element Int
+resistancesFrom eqMap = T.makeResistanceMap resList vulnList
+  where eqList = catMaybes $ Map.elems eqMap
+        resList = concat $ map eqResistances eqList
+        vulnList = concat $ map eqVulnerabilities eqList
 
  
 
